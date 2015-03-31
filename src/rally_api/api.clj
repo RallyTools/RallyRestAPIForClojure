@@ -36,8 +36,7 @@
          all-options (merge http-options
                             options
                             {:headers headers
-                             :as      :json
-                             :debug   true})]
+                             :as      :json})]
      (client/with-middleware middleware
                              (-> (client/get uri all-options)
                                  :body
@@ -89,7 +88,7 @@
                             :rally-host   rally-host
                             :middleware   client/default-middleware}
         csrt-response      (do-get rest-api  [:webservice :v2.0 :security :authorize])
-        security-token     (get-in csrt-response [:operation-result :security-token])]
+        security-token     (:security-token csrt-response)]
     (assoc rest-api :security-token security-token)))
 
 (defn stop-rally-rest-api [rally-rest-api]
