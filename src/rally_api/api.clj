@@ -1,5 +1,6 @@
 (ns rally-api.api
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as client]
             [clj-http.cookies :as cookies]
             [clj-http.conn-mgr :as conn-mgr]
             [clojure.core.cache :as cache]
@@ -13,8 +14,10 @@
    "X-RallyIntegrationPlatform" (env/env "java.version")
    "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"})
 
+(def first-val (comp first vals))
+
 (defn- check-for-rally-errors [response]
-  (if-let [errors (seq (get-in response [:query-result :errors]))]
+  (if-let [errors (seq (:errors response))]
     (throw+ response "rally-errors: %s" errors)
     response))
 
@@ -28,24 +31,41 @@
   ([rally-rest-api uri]
    (do-get rally-rest-api uri {}))
   ([{:keys [http-options rally-host api-key middleware]} uri options]
-   (let [uri         (->uri-string rally-host uri)
-         headers     (merge (:headers options) (assoc rally-integration-headers "ZSESSIONID" api-key))
+   (let [uri (->uri-string rally-host uri)
+         headers (merge (:headers options) (assoc rally-integration-headers "ZSESSIONID" api-key))
          all-options (merge http-options
                             options
                             {:headers headers
-                             :as      :json})]
+                             :as      :json
+                             :debug   true})]
      (client/with-middleware middleware
-       (-> (client/get uri all-options)
-           :body
-           data/->clojure-map
-           check-for-rally-errors)))))
+                             (-> (client/get uri all-options)
+                                 :body
+                                 data/->clojure-map
+                                 first-val
+                                 check-for-rally-errors)))))
+
+(defn create-object [{:keys [http-options rally-host security-token]} rally-type data]
+  (let [uri         (str (->uri-string rally-host rally-type) "/" "create") 
+        headers     rally-integration-headers
+        all-options (merge http-options
+                           {:headers      headers
+                            :as           :json
+                            :query-params {:key security-token}
+                            :body         (json/generate-string (data/->rally-map {rally-type data}))})]
+    (-> (client/post uri all-options)
+        :body
+        data/->clojure-map
+        first-val
+        check-for-rally-errors
+        :object)))
 
 (defn query [rally-rest-api uri query-spec]
   (let [query-params (-> query-spec
                          (update-in [:query] data/create-query)
                          (update-in [:fetch] data/create-fetch))]
     (-> (do-get rally-rest-api uri {:query-params query-params})
-        (get-in [:query-result :results]))))
+        :results)))
 
 (defn find-first [rally-rest-api uri query-spec]
   (-> (query rally-rest-api uri query-spec)
@@ -61,17 +81,16 @@
     (-> (find-first rally-rest-api :workspace query-spec)
         :object-id)))
 
-(defn create-rest-api [http-client-params]
-  (let [connection-manager (conn-mgr/make-reusable-conn-manager http-client-params)
-        cache              (atom (cache/lru-cache-factory {}))
-        cache-ttl          (or (:http-cache-ttl http-client-params) (env/env :http-cache-ttl))]
-    {:http-options {:connection-manager connection-manager
-                    :cookie-store       (cookies/cookie-store)}
-     :api-key      (or (:api-key http-client-params) (env/env :rally-api-key))
-     :rally-host   (or (:rally-host http-client-params) (env/env :rally-host))
-     :cache        cache
-     :cache-ttl    cache-ttl
-     :middleware   client/default-middleware}))
+(defn create-rest-api [username password rally-host]
+  (let [connection-manager (conn-mgr/make-reusable-conn-manager {})
+        rest-api           {:http-options {:connection-manager connection-manager
+                                           :cookie-store       (cookies/cookie-store)
+                                           :basic-auth         [username password]}
+                            :rally-host   rally-host
+                            :middleware   client/default-middleware}
+        csrt-response      (do-get rest-api  [:webservice :v2.0 :security :authorize])
+        security-token     (get-in csrt-response [:operation-result :security-token])]
+    (assoc rest-api :security-token security-token)))
 
 (defn stop-rally-rest-api [rally-rest-api]
   (conn-mgr/shutdown-manager (get-in rally-rest-api [:http-options :connection-manager]))
