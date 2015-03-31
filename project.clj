@@ -16,7 +16,5 @@
                  [slingshot "0.12.2"]]
   :jvm-opts ["-Xmx1g"]
   :profiles {:dev {:source-paths ["dev"]
-                   :dependencies [[com.github.tomakehurst/wiremock "1.54"]
-                                  [ring/ring-codec "1.0.0"]
-                                  [criterium "0.4.3"]
+                   :dependencies [[criterium "0.4.3"]
                                   [crypto-random "1.2.0"]]}})
