@@ -27,7 +27,7 @@
 (defn clojure-type->rally-type [type]
   (if (= type :userstory)
     "HierarchicalRequirement"
-    type))
+    (csk/->PascalCaseString type)))
 
 (defn ->clojure-key-name [k]
   (if (metadata-name? k)

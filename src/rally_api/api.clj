@@ -44,10 +44,11 @@
           first
           check-for-rally-errors))))
 
-(defn- do-modification [{:keys [http-options middleware security-token]} uri rally-type data]
-  (let [all-options (assoc http-options
-                           :query-params {:key security-token}
-                           :body         (json/generate-string (data/->rally-map {rally-type data})))]
+(defn- do-modification [{:keys [http-options middleware security-token]} uri type data]
+  (let [rally-type  (data/clojure-type->rally-type type)
+        all-options (assoc http-options
+                      :query-params {:key security-token}
+                      :body         (json/generate-string (data/->rally-map {rally-type data})))]
     (-> (do-request middleware :post uri all-options)
         :object)))
 
@@ -57,16 +58,16 @@
   ([{:keys [http-options rally-host middleware]} uri options]
      (let [uri         (->uri-string rally-host uri)
            all-options (merge http-options options)]
-     (do-request middleware :get uri all-options))))
+       (do-request middleware :get uri all-options))))
 
-(defn create-object [rest-api rally-type data]
-  (let [uri         (str (->uri-string (:rally-host rest-api) rally-type) "/" "create") ]
-    (do-modification rest-api uri rally-type data)))
+(defn create-object [rest-api type data]
+  (let [uri (str (->uri-string (:rally-host rest-api) type) "/" "create") ]
+    (do-modification rest-api uri type data)))
 
 (defn update-object [rest-api object data]
-  (let [uri         (str (:metadata/ref object))
-        rally-type  (:metadata/type object)]
-    (do-modification rest-api uri rally-type data)))
+  (let [uri  (str (:metadata/ref object))
+        type (:metadata/type object)]
+    (do-modification rest-api uri type data)))
 
 (defn delete-object [{:keys [middleware security-token http-options]} object]
   (do-request middleware :delete (str (:metadata/ref object)) (assoc http-options :query-params {:key security-token})))
@@ -83,6 +84,10 @@
                          (update-in [:fetch] data/create-fetch))]
     (-> (do-get rally-rest-api uri {:query-params query-params})
         :results)))
+
+(defn query-seq [rally-rest-api uri {:keys [start pagesize] :as query-spec}]
+  (when-let [results (seq (query rally-rest-api uri query-spec))]
+    (concat results (lazy-seq (query-seq rally-rest-api uri (assoc query-spec :start (+ start pagesize)))))))
 
 (defn find-first [rally-rest-api uri query-spec]
   (-> (query rally-rest-api uri query-spec)

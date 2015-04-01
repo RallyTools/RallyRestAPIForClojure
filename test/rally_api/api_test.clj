@@ -1,5 +1,6 @@
 (ns rally-api.api-test
   (:require [clojure.test :refer :all]
+            [clojure.set :as set]
             [crypto.random :as random]
             [environ.core :as env]
             [rally-api.api :as api]))
@@ -16,7 +17,7 @@
         (f))
       (finally (api/stop-rally-rest-api rest-api)))))
 
-(def generate-string (partial random/base64 15))
+(def generate-string (partial random/base32 15))
 
 (use-fixtures :each api-fixture)
 
@@ -45,7 +46,17 @@
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest can-delete-userstory
-  (let [ userstory     (api/create-object *rest-api* :userstory {:name (generate-string)})
+  (let [userstory      (api/create-object *rest-api* :userstory {:name (generate-string)})
         _              (api/delete-object *rest-api* userstory)
         read-userstory (api/get-object *rest-api* (:metadata/ref userstory))]
     (is (nil? read-userstory))))
+
+(deftest query-seq-should-cross-pages
+  (let [prefix              (generate-string)
+        created-userstories (doall (repeatedly 20 #(api/create-object *rest-api* :userstory {:name (str prefix (generate-string))})))
+        userstory-seq       (api/query-seq *rest-api* :userstory {:start 1 :pagesize 10 :query [:contains :name prefix]})
+
+        created-refs        (map :metadata/ref created-userstories)
+        queried-refs        (map :metadata/ref userstory-seq)]
+
+    (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
