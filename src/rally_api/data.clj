@@ -97,8 +97,10 @@
           ->rally-map))))
 
 (defn create-fetch [fetch]
-  (->> (map ->rally-case fetch)
-       (string/join ",")))
+  (if (true? fetch)
+    "true"
+    (->> (map ->rally-case fetch)
+         (string/join ","))))
 
 (declare create-query)
 (def ^:private logic-expression? #{:or :and})

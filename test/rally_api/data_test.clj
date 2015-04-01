@@ -67,6 +67,10 @@
   (let [fetch [:name :formatted-id :object-id :description]]
     (is (= "Name,FormattedID,ObjectID,Description" (data/create-fetch fetch)))))
 
+(deftest create-fetch-should-passthrough-true
+  (let [fetch true]
+    (is (= "true" (data/create-fetch fetch)))))
+
 (deftest create-query-should-translate-names
   (let [query [:= :formatted-id "S80221"]]
     (is (= "(FormattedID = \"S80221\")" (data/create-query query)))))

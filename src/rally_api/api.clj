@@ -30,12 +30,14 @@
          (map name)
          (string/join "/"))))
 
-(defn- do-request [middleware method uri options]
-  (let [headers (merge (:headers options) rally-integration-headers)
-        request (merge options {:method  method
-                                :url     uri
-                                :headers headers
-                                :as      :json})]
+(defn- do-request [{:keys [middleware current-project]} method uri options]
+  (let [maybe-update-project (fn [project-ref] (or project-ref (:metadata/ref current-project)))
+        headers              (merge (:headers options) rally-integration-headers)
+        request              (merge options {:method  method
+                                             :url     uri
+                                             :headers headers
+                                             :as      :json})
+        request              (update-in request [:query-params :project] maybe-update-project)]
     (client/with-middleware middleware
       (-> (client/request request)
           :body
@@ -44,21 +46,21 @@
           first
           check-for-rally-errors))))
 
-(defn- do-modification [{:keys [http-options middleware security-token]} uri type data]
+(defn- do-modification [{:keys [http-options security-token] :as rally-rest} uri type data]
   (let [rally-type  (data/clojure-type->rally-type type)
         all-options (assoc http-options
                       :query-params {:key security-token}
                       :body         (json/generate-string (data/->rally-map {rally-type data})))]
-    (-> (do-request middleware :post uri all-options)
+    (-> (do-request rally-rest :post uri all-options)
         :object)))
 
 (defn- do-get
   ([rally-rest-api uri]
    (do-get rally-rest-api uri {}))
-  ([{:keys [http-options rally-host middleware]} uri options]
+  ([{:keys [http-options rally-host] :as rally-rest} uri options]
      (let [uri         (->uri-string rally-host uri)
            all-options (merge http-options options)]
-       (do-request middleware :get uri all-options))))
+       (do-request rally-rest :get uri all-options))))
 
 (defn create-object [rest-api type data]
   (let [uri (str (->uri-string (:rally-host rest-api) type) "/" "create") ]
@@ -69,19 +71,19 @@
         type (:metadata/type object)]
     (do-modification rest-api uri type data)))
 
-(defn delete-object [{:keys [middleware security-token http-options]} object]
-  (do-request middleware :delete (str (:metadata/ref object)) (assoc http-options :query-params {:key security-token})))
+(defn delete-object [{:keys [security-token http-options] :as rally-rest} object]
+  (do-request rally-rest :delete (str (:metadata/ref object)) (assoc http-options :query-params {:key security-token})))
 
-(defn get-object [{:keys [middleware http-options]} ref]
-  (do-request middleware :get (str ref) http-options))
+(defn get-object [{:keys [middleware http-options] :as rally-rest} ref]
+  (do-request rally-rest :get (str ref) http-options))
 
 (defn refresh-object [rest-api object]
   (get-object rest-api (:metadata/ref object)))
 
 (defn query [rally-rest-api uri query-spec]
-  (let [query-params (-> query-spec
-                         (update-in [:query] data/create-query)
-                         (update-in [:fetch] data/create-fetch))]
+  (let [ query-params (-> query-spec
+                          (update-in [:query] data/create-query)
+                          (update-in [:fetch] data/create-fetch))]
     (-> (do-get rally-rest-api uri {:query-params query-params})
         :results)))
 
@@ -99,9 +101,13 @@
     (find-first rally-rest-api rally-type query-spec)))
 
 (defn current-workspace [rally-rest-api]
-  (let [query-spec {:fetch [:object-id]}]
-    (-> (find-first rally-rest-api :workspace query-spec)
-        :object-id)))
+  (refresh-object rally-rest-api (get-in rally-rest-api [:current-project :workspace])))
+
+(defn current-project [rally-rest-api]
+  (find-first rally-rest-api :project {:fetch true}))
+
+(defn set-current-project [rally-rest current-project]
+  (assoc rally-rest :current-project current-project))
 
 (defn create-rest-api [username password rally-host]
   (let [connection-manager (conn-mgr/make-reusable-conn-manager {})
@@ -109,10 +115,10 @@
                                            :cookie-store       (cookies/cookie-store)}
                             :rally-host   rally-host
                             :middleware   client/default-middleware}
-        crt-rest-api       (assoc-in rest-api [:http-options :basic-auth] [username password])
-        csrt-response      (do-get crt-rest-api [:webservice :v2.0 :security :authorize])
-        security-token     (:security-token csrt-response)]
-    (assoc rest-api :security-token security-token)))
+        crt-rest-api       (assoc-in rest-api [:http-options :basic-auth] [username password])]
+    (-> rest-api
+        (assoc :security-token (:security-token (do-get crt-rest-api [:webservice :v2.0 :security :authorize])))
+        (set-current-project (current-project rest-api)))))
 
 (defn stop-rally-rest-api [rally-rest-api]
   (conn-mgr/shutdown-manager (get-in rally-rest-api [:http-options :connection-manager]))
