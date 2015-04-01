@@ -74,7 +74,7 @@
 (defn delete-object [{:keys [security-token http-options] :as rally-rest} object]
   (do-request rally-rest :delete (str (:metadata/ref object)) (assoc http-options :query-params {:key security-token})))
 
-(defn get-object [{:keys [middleware http-options] :as rally-rest} ref]
+(defn get-object [{:keys [http-options] :as rally-rest} ref]
   (do-request rally-rest :get (str ref) http-options))
 
 (defn refresh-object [rest-api object]
