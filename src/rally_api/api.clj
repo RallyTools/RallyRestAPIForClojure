@@ -88,8 +88,11 @@
         :results)))
 
 (defn query-seq [rally-rest-api uri {:keys [start pagesize] :as query-spec}]
-  (when-let [results (seq (query rally-rest-api uri query-spec))]
-    (concat results (lazy-seq (query-seq rally-rest-api uri (assoc query-spec :start (+ start pagesize)))))))
+  (let [start    (or start 1)
+        pagesize (or pagesize 200)
+        results  (seq (query rally-rest-api uri query-spec))]
+    (when results 
+      (concat results (lazy-seq (query-seq rally-rest-api uri (assoc query-spec :start (+ start pagesize) :pagesize pagesize)))))))
 
 (defn find-first [rally-rest-api uri query-spec]
   (-> (query rally-rest-api uri query-spec)
@@ -106,6 +109,9 @@
 (defn current-project [rally-rest-api]
   (find-first rally-rest-api :project {:fetch true}))
 
+(defn current-user [{:keys [rally-host] :as rally-rest-api}]
+  (get-object rally-rest-api (->uri-string rally-host (keyword "user:current"))))
+
 (defn set-current-project [rally-rest current-project]
   (assoc rally-rest :current-project current-project))
 
@@ -118,7 +124,8 @@
         crt-rest-api       (assoc-in rest-api [:http-options :basic-auth] [username password])]
     (-> rest-api
         (assoc :security-token (:security-token (do-get crt-rest-api [:webservice :v2.0 :security :authorize])))
-        (set-current-project (current-project rest-api)))))
+        (set-current-project (current-project rest-api))
+        (assoc :current-user (current-user rest-api)))))
 
 (defn stop-rally-rest-api [rally-rest-api]
   (conn-mgr/shutdown-manager (get-in rally-rest-api [:http-options :connection-manager]))

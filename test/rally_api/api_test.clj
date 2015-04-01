@@ -60,3 +60,13 @@
         queried-refs        (map :metadata/ref userstory-seq)]
 
     (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
+
+(deftest query-seq-should-cross-pages-with-default-start-and-pagesizes
+  (let [prefix              (generate-string)
+        created-userstories (doall (repeatedly 20 #(api/create-object *rest-api* :userstory {:name (str prefix (generate-string))})))
+        userstory-seq       (api/query-seq *rest-api* :userstory {:query [:contains :name prefix]})
+
+        created-refs        (map :metadata/ref created-userstories)
+        queried-refs        (map :metadata/ref userstory-seq)]
+
+    (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
