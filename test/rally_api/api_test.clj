@@ -70,3 +70,12 @@
         queried-refs        (map :metadata/ref userstory-seq)]
 
     (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
+
+(deftest query-should-handle-order-by-correctly
+  (let [created-userstories (doall (repeatedly 20 #(api/create-object *rest-api* :userstory {:name (generate-string)})))
+        userstory-seq       (api/query-seq *rest-api* :userstory {:order [:name]})
+
+        userstory-names     (map :metadata/ref-object-name userstory-seq)
+        sorted-names        (sort String/CASE_INSENSITIVE_ORDER userstory-names)]
+
+    (is (= userstory-names sorted-names))))

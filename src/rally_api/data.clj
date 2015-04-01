@@ -102,6 +102,13 @@
     (->> (map ->rally-case fetch)
          (string/join ","))))
 
+(defn create-order [orders]
+  (let [transform (fn [[attribute direction]]
+                    (str (->rally-case attribute) " " (name direction)))]
+    (->> orders
+         (map (fn [order] (if (sequential? order) (transform order) (->rally-case order))))
+         (string/join ","))))
+
 (declare create-query)
 (def ^:private logic-expression? #{:or :and})
 

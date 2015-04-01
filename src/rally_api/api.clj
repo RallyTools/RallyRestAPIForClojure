@@ -83,7 +83,8 @@
 (defn query [rally-rest-api uri query-spec]
   (let [ query-params (-> query-spec
                           (update-in [:query] data/create-query)
-                          (update-in [:fetch] data/create-fetch))]
+                          (update-in [:fetch] data/create-fetch)
+                          (update-in [:order] data/create-order))]
     (-> (do-get rally-rest-api uri {:query-params query-params})
         :results)))
 

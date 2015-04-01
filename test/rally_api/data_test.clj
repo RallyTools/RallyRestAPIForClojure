@@ -71,6 +71,13 @@
   (let [fetch true]
     (is (= "true" (data/create-fetch fetch)))))
 
+(deftest create-order-should-translate-correctly
+  (is (= "Name" (data/create-order [:name])))
+  (is (= "Name,Description" (data/create-order [:name :description])))
+  (is (= "Name asc" (data/create-order [[:name :asc]])))
+  (is (= "Description,Name asc" (data/create-order [:description [:name :asc]])))
+  (is (= "Name desc,ObjectID" (data/create-order [[:name :desc] :object-id]))))
+
 (deftest create-query-should-translate-names
   (let [query [:= :formatted-id "S80221"]]
     (is (= "(FormattedID = \"S80221\")" (data/create-query query)))))
