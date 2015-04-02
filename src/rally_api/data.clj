@@ -34,14 +34,17 @@
     (keyword "metadata" (csk/->kebab-case-string k))
     (csk/->kebab-case-keyword k)))
 
+(defn- not-nil? [v]
+  (not (or (nil? v) (= "null" v))))
+
 (defn ->clojure-map [m]
   (letfn [(transform [[k v]]
             (let [new-k (->clojure-key-name k)
                   new-v (case new-k
                           :metadata/type            (rally-type->clojure-type v)
-                          :metadata/ref-object-uuid (UUID/fromString v)
+                          :metadata/ref-object-uuid (when (not-nil? v) (UUID/fromString v))
                           :metadata/object-version  (Integer/parseInt v)
-                          :metadata/ref             (URI/create v)
+                          :metadata/ref             (when (not-nil? v) (URI/create v))
                           :metadata/rally-api-major (Integer/parseInt v)
                           :metadata/rally-api-minor (Integer/parseInt v)
                           v)]

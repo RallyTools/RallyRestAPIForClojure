@@ -35,13 +35,13 @@
       :object))
 
 (defn update-object
-  ([rest-api object data]
-     (update-object rest-api object (:metadata/type object) data))
-  ([rest-api ref-or-object type data]
+  ([rest-api object updated-data]
+     (update-object rest-api object (:metadata/type object) updated-data))
+  ([rest-api ref-or-object type updated-data]
      (-> rest-api
          (request/set-method :post)
          (request/set-url ref-or-object)
-         (request/set-body-as-map type data)
+         (request/set-body-as-map type updated-data)
          do-request
          :object)))
 
@@ -80,7 +80,8 @@
     (find-first rest-api rally-type query-spec)))
 
 (defn current-workspace [rest-api]
-  (get-object rest-api (request/get-current-project rest-api)))
+  (let [current-project (get-object rest-api (request/get-current-project rest-api))]
+    (get-object rest-api (:workspace current-project))))
 
 (defn current-project [rest-api]
   (find-first rest-api :project {:fetch true}))
