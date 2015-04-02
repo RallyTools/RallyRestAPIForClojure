@@ -73,3 +73,8 @@
                              [:and 
                               [:= :age 34]
                               [:contains :email "test.com"]]]))))
+
+(deftest convert-to-ref
+  (let [ref-str "http://localhost:7001/slm/webservice/v2.0/defect"]
+    (is (= ref-str (data/->ref ref-str)))
+    (is (= ref-str (data/->ref {:metadata/ref ref-str})))))

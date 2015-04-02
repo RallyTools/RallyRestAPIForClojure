@@ -48,6 +48,9 @@
               [new-k new-v]))]
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))
 
+(defn ->ref [ref-or-object]
+  (or (:metadata/ref ref-or-object) ref-or-object))
+
 (defn create-fetch [fetch]
   (if (true? fetch)
     "true"

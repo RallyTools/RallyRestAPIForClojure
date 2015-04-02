@@ -42,17 +42,16 @@
       do-request
       :object))
 
-(defn delete-object [rest-api object]
+(defn delete-object [rest-api ref-or-object]
   (-> rest-api
       (request/set-method :delete)
-      (request/set-url (:metadata/ref object))
+      (request/set-url ref-or-object)
       do-request))
 
 (defn get-object [rest-api ref-or-object]
-  (let [ref (or (:metadata/ref ref-or-object) ref-or-object)]
-    (-> rest-api
-        (request/set-url ref)
-        do-request)))
+  (-> rest-api
+      (request/set-url ref-or-object)
+      do-request))
 
 (defn query [rest-api uri query-spec]
   (-> rest-api

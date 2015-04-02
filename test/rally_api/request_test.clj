@@ -8,6 +8,11 @@
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/create" (request/get-url (request/set-uri rest-api :defect "create"))))
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/create/me" (request/get-url (request/set-uri rest-api :defect "create" "me"))))))
 
+(deftest set-url-should-translate-objects-to-refs
+  (let [rest-api {:rally-host "http://localhost:7001/slm"}]
+    (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (request/get-url (request/set-url rest-api "http://localhost:7001/slm/webservice/v2.0/Defect"))))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (request/get-url (request/set-url rest-api {:metadata/ref "http://localhost:7001/slm/webservice/v2.0/Defect"}))))))
+
 (deftest set-body-as-map-should-create-valid-body
   (let [rest-api {:rally-host "http://localhost:7001/slm"}]
     (is (= "{\"Defect\":{\"Name\":\"Jane\"}}" (request/get-body (request/set-body-as-map rest-api :defect {:name "Jane"}))))

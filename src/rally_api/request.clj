@@ -38,8 +38,8 @@
 (defn set-security-token [rest-api security-token]
   (assoc-in rest-api [:request :query-params :key] security-token))
 
-(defn set-url [rest-api url]
-  (assoc-in rest-api [:request :url] (str url)))
+(defn set-url [rest-api ref-or-object]
+  (assoc-in rest-api [:request :url] (str (data/->ref ref-or-object))))
 
 (defn get-url [rest-api]
   (get-in rest-api [:request :url]))
