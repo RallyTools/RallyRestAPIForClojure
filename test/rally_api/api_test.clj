@@ -8,10 +8,7 @@
 (def ^:dynamic *rest-api*)
 
 (defn api-fixture [f]
-  (let [username   (env/env :username)
-        password   (env/env :password)
-        rally-host (env/env :rally-host)
-        rest-api   (api/create-rest-api username password rally-host)]
+  (let [rest-api (api/create-rest-api)]
     (try
       (binding [*rest-api* rest-api]
         (f))
