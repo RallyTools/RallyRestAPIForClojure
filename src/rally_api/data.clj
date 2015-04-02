@@ -20,7 +20,7 @@
     (utils/transform-keys f m)))
 
 (defn rally-type->clojure-type [type]
-  (if (= type "HierarchicalRequirement")
+  (if (.equalsIgnoreCase type "HierarchicalRequirement")
     :userstory
     (csk/->kebab-case-keyword type)))
 
@@ -29,6 +29,11 @@
     :userstory "HierarchicalRequirement"
     :security  "security"
     (csk/->PascalCaseString type)))
+
+(defn rally-ref->clojure-type [rally-ref]
+  (let [type-regex #"/slm/webservice/[^/]+/([^/]+).*"
+        [_ type]   (re-find type-regex (str rally-ref))]
+    (rally-type->clojure-type type)))
 
 (defn ->clojure-key-name [k]
   (if (metadata-name? k)

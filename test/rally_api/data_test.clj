@@ -21,6 +21,11 @@
   (is (= "security" (data/clojure-type->rally-type :security)))
   (is (= "Defect" (data/clojure-type->rally-type :defect))))
 
+(deftest convert-rally-ref-to-clojure-type
+  (is (= :userstory (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234")))
+  (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect")))
+  (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect/create"))))
+
 (deftest convert-to-clojure-map
   (let [uuid (UUID/randomUUID)]
     (is (= {:query-result {:metadata/type :user :total-result-count 1}} (data/->clojure-map {:QueryResult {:_type "User" :TotalResultCount 1}})))

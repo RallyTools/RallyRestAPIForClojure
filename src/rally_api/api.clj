@@ -34,16 +34,15 @@
       do-request
       :object))
 
-(defn update-object
-  ([rest-api object updated-data]
-     (update-object rest-api object (:metadata/type object) updated-data))
-  ([rest-api ref-or-object type updated-data]
-     (-> rest-api
-         (request/set-method :post)
-         (request/set-url ref-or-object)
-         (request/set-body-as-map type updated-data)
-         do-request
-         :object)))
+(defn update-object [rest-api ref-or-object updated-data]
+  (let [ref  (data/->ref ref-or-object)
+        type (or (:metadata/type ref-or-object) (data/rally-ref->clojure-type ref))]
+    (-> rest-api
+        (request/set-method :post)
+        (request/set-url ref)
+        (request/set-body-as-map type updated-data)
+        do-request
+        :object)))
 
 (defn delete-object [rest-api ref-or-object]
   (-> rest-api
