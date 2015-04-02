@@ -34,13 +34,16 @@
       do-request
       :object))
 
-(defn update-object [rest-api object data]
-  (-> rest-api
-      (request/set-method :post)
-      (request/set-url (:metadata/ref object))
-      (request/set-body-as-map (:metadata/type object) data)
-      do-request
-      :object))
+(defn update-object
+  ([rest-api object data]
+     (update-object rest-api object (:metadata/type object) data))
+  ([rest-api ref-or-object type data]
+     (-> rest-api
+         (request/set-method :post)
+         (request/set-url ref-or-object)
+         (request/set-body-as-map type data)
+         do-request
+         :object)))
 
 (defn delete-object [rest-api ref-or-object]
   (-> rest-api

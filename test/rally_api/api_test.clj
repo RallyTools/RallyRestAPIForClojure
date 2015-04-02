@@ -39,6 +39,13 @@
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
+(deftest userstory-can-be-updated-without-existing-object
+  (let [userstory-name (generate-string)
+        userstory      (api/create-object *rest-api* :userstory {:name (generate-string)})
+        _              (api/update-object *rest-api* (:metadata/ref userstory) :userstory {:name userstory-name})
+        read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
+    (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
+
 (deftest can-get-userstory-by-ref
   (let [userstory-name (generate-string)
         userstory      (api/create-object *rest-api* :userstory {:name userstory-name})
