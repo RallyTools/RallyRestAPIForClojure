@@ -23,7 +23,7 @@
 
 (defn current-schema [rest-api]
   (let [current-project (api/get-object rest-api (request/get-current-project rest-api))]
-    (->> (api/query rest-api [:schema :v2.0 :project (str (:object-id current-project))] {})
+    (->> (api/query rest-api [:slm :schema :v2.0 :project (str (:object-id current-project))] {})
          ->cleanup-schema
          map-by-element-name)))
 

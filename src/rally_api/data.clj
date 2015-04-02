@@ -25,8 +25,9 @@
     (csk/->kebab-case-keyword type)))
 
 (defn clojure-type->rally-type [type]
-  (if (= type :userstory)
-    "HierarchicalRequirement"
+  (case type
+    :userstory "HierarchicalRequirement"
+    :security  "security"
     (csk/->PascalCaseString type)))
 
 (defn ->clojure-key-name [k]

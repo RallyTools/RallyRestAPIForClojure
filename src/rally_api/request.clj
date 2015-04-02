@@ -4,7 +4,7 @@
             [rally-api.data :as data]))
 
 (defn- ->uri-string [rally-host uri]
-  (let [uri-seq (if (keyword? uri) [:webservice :v2.0 (data/clojure-type->rally-type uri)] uri)]
+  (let [uri-seq (if (keyword? uri) [:slm :webservice :v2.0 (data/clojure-type->rally-type uri)] uri)]
     (->> (cons rally-host uri-seq)
          (map name)
          (string/join "/"))))
@@ -45,8 +45,9 @@
   (get-in rest-api [:request :url]))
 
 (defn set-uri [{:keys [rally-host] :as rest-api} uri & additional]
-  (let [base-uri (->uri-string rally-host uri)
-        url      (string/join "/" (cons base-uri additional))]
+  (let [base-uri   (->uri-string rally-host uri)
+        additional (map name additional)
+        url        (string/join "/" (cons base-uri additional))]
     (set-url rest-api url)))
 
 (defn add-headers [rest-api headers]

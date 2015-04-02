@@ -105,7 +105,7 @@
                             :middleware client/default-middleware}
         security-token     (-> rest-api
                                (request/set-basic-auth username password)
-                               (request/set-uri [:webservice :v2.0 :security :authorize])
+                               (request/set-uri :security :authorize)
                                do-request
                                :security-token)]
     (-> rest-api

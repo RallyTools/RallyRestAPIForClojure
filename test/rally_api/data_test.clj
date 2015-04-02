@@ -16,6 +16,11 @@
   (is (= {:Name "Adam"} (data/->rally-map {:name "Adam"})))
   (is (= {:ObjectID 123} (data/->rally-map {:object-id 123}))))
 
+(deftest convert-clojure-type-to-rally-type
+  (is (= "HierarchicalRequirement" (data/clojure-type->rally-type :userstory)))
+  (is (= "security" (data/clojure-type->rally-type :security)))
+  (is (= "Defect" (data/clojure-type->rally-type :defect))))
+
 (deftest convert-to-clojure-map
   (let [uuid (UUID/randomUUID)]
     (is (= {:query-result {:metadata/type :user :total-result-count 1}} (data/->clojure-map {:QueryResult {:_type "User" :TotalResultCount 1}})))
