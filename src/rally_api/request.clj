@@ -12,12 +12,20 @@
 (defn set-query-param [rest-api name value]
   (assoc-in rest-api [:request :query-params name] value))
 
+(defn get-query-param [rest-api name]
+  (get-in rest-api [:request :query-params name]))
+
+(defn- maybe-update-in [m k f]
+  (if (contains? m k)
+    (assoc m k (f (k m)))
+    m))
+
 (defn merge-query-params [rest-api query-params]
   (let [default-params (get-in rest-api [:request :query-params])
         query-params   (-> query-params
-                           (update-in [:query] data/create-query)
-                           (update-in [:order] data/create-order)
-                           (update-in [:fetch] data/create-fetch))
+                           (maybe-update-in :query data/create-query)
+                           (maybe-update-in :order data/create-order)
+                           (maybe-update-in :fetch data/create-fetch))
         merged-params  (merge default-params query-params)]
     (assoc-in rest-api [:request :query-params] merged-params)))
 
@@ -33,10 +41,13 @@
 (defn set-url [rest-api url]
   (assoc-in rest-api [:request :url] (str url)))
 
+(defn get-url [rest-api]
+  (get-in rest-api [:request :url]))
+
 (defn set-uri [{:keys [rally-host] :as rest-api} uri & additional]
   (let [base-uri (->uri-string rally-host uri)
         url      (string/join "/" (cons base-uri additional))]
-    (assoc-in rest-api [:request :url] url)))
+    (set-url rest-api url)))
 
 (defn add-headers [rest-api headers]
   (update-in rest-api [:request :headers] #(merge % headers)))
@@ -51,3 +62,6 @@
   (let [rally-type (data/clojure-type->rally-type clojure-type)
         body-map   {rally-type data}]
     (assoc-in rest-api [:request :body] (json/generate-string (data/->rally-map body-map)))))
+
+(defn get-body [rest-api]
+  (get-in rest-api [:request :body]))
