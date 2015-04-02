@@ -94,7 +94,7 @@
 (defn- security-token [rest-api {:keys [username password api-key]}]
   (-> rest-api
       (request/set-basic-auth username password)
-      (request/set-uri [:security :authorize])
+      (request/set-uri :security :authorize)
       do-request
       :security-token))
 
@@ -112,7 +112,7 @@
                             :middleware client/default-middleware}
         rest-api           (if api-key
                              (request/add-headers rest-api {:zsessionid api-key})
-                             (request/set-security-token (security-token rest-api credentials)))]
+                             (request/set-security-token rest-api (security-token rest-api credentials)))]
     (request/set-current-project rest-api (current-project rest-api))))
 
 (defn create-rest-api
