@@ -12,7 +12,7 @@
     (try
       (binding [*rest-api* rest-api]
         (f))
-      (finally (api/stop-rally-rest-api rest-api)))))
+      (finally (api/shutdown-rest-api rest-api)))))
 
 (def generate-string (partial random/base32 15))
 

@@ -131,6 +131,6 @@
        (create-rest-api username password rally-host)
        (create-rest-api api-key rally-host)))))
 
-(defn stop-rally-rest-api [rest-api]
+(defn shutdown-rest-api [rest-api]
   (conn-mgr/shutdown-manager (get-in rest-api [:request :connection-manager]))
   (assoc-in rest-api [:request :connection-manager] nil))
