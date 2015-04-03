@@ -43,7 +43,7 @@
     (csk/->kebab-case-keyword k)))
 
 (defn- not-nil? [v]
-  (not (or (nil? v) (= "null" v))))
+  (not (or (empty? v) (= "null" v))))
 
 (defn ->clojure-map [m]
   (letfn [(transform [[k v]]
