@@ -51,7 +51,7 @@
 
 (deftest can-delete-userstory
   (let [userstory      (api/create! *rest-api* :userstory {:name (generate-string)})
-        _              (api/delete-object *rest-api* userstory)
+        _              (api/delete! *rest-api* userstory)
         read-userstory (api/get-object *rest-api* (:metadata/ref userstory))]
     (is (nil? read-userstory))))
 

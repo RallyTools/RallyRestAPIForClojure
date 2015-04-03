@@ -44,7 +44,7 @@
         do-request
         :object)))
 
-(defn delete-object [rest-api ref-or-object]
+(defn delete! [rest-api ref-or-object]
   (-> rest-api
       (request/set-method :delete)
       (request/set-url ref-or-object)
