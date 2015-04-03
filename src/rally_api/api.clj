@@ -63,21 +63,23 @@
 (defn query-for-page [rest-api uri start pagesize query-spec]
   (-> rest-api
       (request/set-uri uri)
+      (request/merge-query-params query-spec)
       (request/set-query-param :start start)
       (request/set-query-param :pagesize pagesize)
-      (request/merge-query-params query-spec)
-      do-request
-      :results))
+      do-request))
 
 (defn query
   ([rest-api uri]
      (query rest-api uri {}))
   ([rest-api uri {:keys [start pagesize] :as query-spec}]
-     (let [start    (or start 1)
-           pagesize (or pagesize 200)
-           results  (seq (query-for-page rest-api uri start pagesize query-spec))]
-       (when results 
-         (concat results (lazy-seq (query rest-api uri (assoc query-spec :start (+ start pagesize) :pagesize pagesize))))))))
+     (let [start       (or start 1)
+           pagesize    (or pagesize 200)
+           first-page  (query-for-page rest-api uri start pagesize query-spec)
+           starts      (range (+ start pagesize) (inc (:total-result-count first-page)) pagesize)
+           other-pages (->> starts
+                            (map #(query-for-page rest-api uri % pagesize query-spec))
+                            (mapcat :results))]
+       (concat (:results first-page) other-pages))))
 
 (defn find
   ([rest-api ref-or-object]

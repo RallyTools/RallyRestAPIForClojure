@@ -63,7 +63,7 @@
 
 (deftest query-seq-should-cross-pages
   (let [prefix              (generate-string)
-        created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
+        created-userstories (doall (repeatedly 21 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
         userstory-seq       (api/query *rest-api* :userstory {:start 1 :pagesize 10 :query [:contains :name prefix]})
 
         created-refs        (map :metadata/ref created-userstories)

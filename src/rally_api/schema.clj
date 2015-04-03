@@ -24,7 +24,7 @@
 (defn current-schema [rest-api]
   (let [current-project (api/find rest-api (request/get-current-project rest-api))]
     ;; The schema endpoint ignores page information and gives you the entire result.
-    (->> (api/query-for-page rest-api [:slm :schema :v2.0 :project (str (:object-id current-project))] 1 1 {})
+    (->> (:results (api/query-for-page rest-api [:slm :schema :v2.0 :project (str (:object-id current-project))] 1 1 {}))
          ->cleanup-schema
          map-by-element-name)))
 
