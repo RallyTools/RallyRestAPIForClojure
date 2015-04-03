@@ -81,8 +81,12 @@
 
 (defn find-by-formatted-id [rest-api rally-type formatted-id]
   (let [query-spec {:query [:= :formatted-id formatted-id]
-                    :fetch [:description :name :formatted-id :owner :object-id]}]
-    (find rest-api rally-type query-spec)))
+                    :fetch true}]
+    ;; We use a query and then search because if you look for formatted-id
+    ;; in the artifact endpoint it will return all artifacts with the number
+    ;; part of the formatted it. So searching for US11 will also return DE11,T11, and so on.
+    (->> (query rest-api rally-type query-spec)
+         (some #(when (= formatted-id (:formatted-id %)) %)))))
 
 (defn current-workspace [rest-api]
   (let [current-project (find rest-api (request/get-current-project rest-api))]

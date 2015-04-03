@@ -29,6 +29,12 @@
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
+(deftest find-by-formatted-id-should-handle-the-oddity-in-querying-for-artifacts
+  (let [userstory (api/create! *rest-api* :userstory {:name (generate-string)})
+        defect    (api/create! *rest-api* :defect {:name (generate-string)})
+        artifact  (api/find-by-formatted-id *rest-api* :artifact (:formatted-id defect))]
+    (is (= (:metadata/ref-object-name artifact) (:metadata/ref-object-name defect)))))
+
 (deftest userstory-can-be-updated
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name (generate-string)})
