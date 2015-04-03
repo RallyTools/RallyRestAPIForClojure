@@ -4,13 +4,19 @@
   (:import [java.util UUID]
            [java.net URI]))
 
+(deftest metadata-name?-should-work-with-rally-case-and-clojure-case-name
+  (is (= true (data/metadata-name? "_ref")))
+  (is (= true (data/metadata-name? :_ref)))
+  (is (= true (data/metadata-name? :metadata/ref)))
+  (is (= false (data/metadata-name? :name))))
+
 (deftest convert-from-clojure-to-rally-case
   (is (= "ObjectID" (data/->rally-case :object-id)))
   (is (= "Name" (data/->rally-case :name)))
   (is (= "DirectChildrenCount" (data/->rally-case :direct-children-count)))
-  (is (= "_ref" (data/->rally-case :_ref)))
+  (is (= "_ref" (data/->rally-case :metadata/ref)))
   (is (= "FormattedID" (data/->rally-case :formatted-id)))
-  (is (= "_objectVersion" (data/->rally-case :_objectVersion))))
+  (is (= "_objectVersion" (data/->rally-case :metadata/object-version))))
 
 (deftest convert-to-rally-map
   (is (= {:Name "Adam"} (data/->rally-map {:name "Adam"})))

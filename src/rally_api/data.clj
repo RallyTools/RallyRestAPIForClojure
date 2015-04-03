@@ -6,12 +6,17 @@
   (:import [java.net URI]
            [java.util UUID]))
 
-(def metadata-name? #{:_ref :_type :_objectVersion :_refObjectUUID :_refObjectName :_rallyAPIMajor :_rallyAPIMinor})
+
 (def ^:const user-story-rally-type "HierarchicalRequirement")
+
+(defn metadata-name? [n]
+  (or
+   (.startsWith (name n) "_")
+   (and (keyword? n) (= "metadata" (namespace n)))))
 
 (defn ->rally-case [n]
   (if (metadata-name? n)
-    (name n)
+    (str "_" (csk/->camelCaseString n))
     (-> (csk/->PascalCaseString n)
         (.replace "Id" "ID"))))
 
