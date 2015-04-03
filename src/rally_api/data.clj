@@ -7,6 +7,7 @@
            [java.util UUID]))
 
 (def metadata-name? #{:_ref :_type :_objectVersion :_refObjectUUID :_refObjectName :_rallyAPIMajor :_rallyAPIMinor})
+(def ^:const user-story-rally-type "HierarchicalRequirement")
 
 (defn ->rally-case [n]
   (if (metadata-name? n)
@@ -19,13 +20,15 @@
     (utils/transform-keys f m)))
 
 (defn rally-type->clojure-type [type]
-  (if (.equalsIgnoreCase type "HierarchicalRequirement")
-    :userstory
+  (if (.equalsIgnoreCase type user-story-rally-type)
+    :user-story
     (csk/->kebab-case-keyword type)))
 
 (defn clojure-type->rally-type [type]
   (case type
-    :userstory "HierarchicalRequirement"
+    :userstory user-story-rally-type
+    :user-story user-story-rally-type
+    :UserStory user-story-rally-type
     :security  "security"
     (csk/->PascalCaseString type)))
 

@@ -17,19 +17,21 @@
   (is (= {:ObjectID 123} (data/->rally-map {:object-id 123}))))
 
 (deftest convert-clojure-type-to-rally-type
-  (is (= "HierarchicalRequirement" (data/clojure-type->rally-type :userstory)))
+  (is (= data/user-story-rally-type (data/clojure-type->rally-type :user-story)))
+  (is (= data/user-story-rally-type (data/clojure-type->rally-type :userstory)))
+  (is (= data/user-story-rally-type (data/clojure-type->rally-type :UserStory)))  
   (is (= "security" (data/clojure-type->rally-type :security)))
   (is (= "Defect" (data/clojure-type->rally-type :defect))))
 
 (deftest convert-rally-ref-to-clojure-type
-  (is (= :userstory (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234")))
+  (is (= :user-story (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234")))
   (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect")))
   (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect/create"))))
 
 (deftest convert-to-clojure-map
   (let [uuid (UUID/randomUUID)]
     (is (= {:query-result {:metadata/type :user :total-result-count 1}} (data/->clojure-map {:QueryResult {:_type "User" :TotalResultCount 1}})))
-    (is (= {:query-result {:metadata/type :userstory}} (data/->clojure-map {:QueryResult {:_type "HierarchicalRequirement"}})))
+    (is (= {:query-result {:metadata/type :user-story}} (data/->clojure-map {:QueryResult {:_type data/user-story-rally-type}})))
     (is (= {:query-result {:metadata/ref-object-uuid uuid}} (data/->clojure-map {:QueryResult {:_refObjectUUID (str uuid)}})))
     (is (= {:metadata/object-version 123} (data/->clojure-map {:_objectVersion "123"})))
     (is (= {:metadata/ref (URI. "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234")}
