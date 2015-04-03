@@ -45,6 +45,15 @@
         do-request
         :object)))
 
+(defn add-to-collection! [rest-api collection-ref-or-object items]
+  (let [ref   (str (data/->ref collection-ref-or-object) "/add")
+        items (map #(hash-map :metadata/ref (data/->ref %)) items)]
+    (-> rest-api
+        (request/set-method :post)
+        (request/set-url ref)
+        (request/set-body-as-map :collection-items items)
+        do-request)))
+
 (defn delete! [rest-api ref-or-object]
   (-> rest-api
       (request/set-method :delete)

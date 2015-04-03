@@ -1,13 +1,20 @@
 (ns rally-api.request
   (:require [cheshire.core :as json]
+            [cheshire.generate :as encoding]
             [clojure.string :as string]
             [rally-api.data :as data]))
 
-(defn- ->uri-string [rally-host uri]
-  (let [uri-seq (if (keyword? uri) [:slm :webservice :v2.0 (data/clojure-type->rally-type uri)] uri)]
-    (->> (cons rally-host uri-seq)
-         (map name)
-         (string/join "/"))))
+(encoding/add-encoder java.net.URI encoding/encode-str)
+
+(defn ->uri-string [rally-host uri]
+  (let [seq->uri (fn [s]
+                   (->> (cons rally-host s)
+                        (map name)
+                        (string/join "/")))]
+    (cond
+     (keyword? uri)   (seq->uri [:slm :webservice :v2.0 (data/clojure-type->rally-type uri)])
+     (sequential? uri) (seq->uri uri)
+     :else (str (data/->ref uri)))))
 
 (defn set-query-param [rest-api name value]
   (assoc-in rest-api [:request :query-params name] value))
@@ -66,3 +73,6 @@
 
 (defn get-body [rest-api]
   (get-in rest-api [:request :body]))
+
+(defn debug [rest-api]
+  (assoc-in rest-api [:request :debug] true))
