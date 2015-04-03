@@ -53,8 +53,6 @@
         [_ type]   (re-find type-regex (str rally-ref))]
     (rally-type->clojure-type type)))
 
-
-
 (defn- not-nil? [v]
   (not (or (empty? v) (= "null" v))))
 
@@ -74,6 +72,14 @@
 
 (defn ->ref [ref-or-object]
   (or (:metadata/ref ref-or-object) ref-or-object))
+
+(defn ->oid [value]
+  (-> value
+      ->ref
+      str
+      (string/split #"\/")
+      last
+      (Long.)))
 
 (defn create-fetch [fetch]
   (if (true? fetch)
