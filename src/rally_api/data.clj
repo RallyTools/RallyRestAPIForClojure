@@ -2,10 +2,9 @@
   (:require [camel-snake-kebab.core :as csk]
             [camel-snake-kebab.extras :as utils]
             [clojure.string :as string]
-            [clojure.walk :as walk]
-            [crypto.random :as random])
-  (:import [java.util UUID]
-           [java.net URI]))
+            [clojure.walk :as walk])
+  (:import [java.net URI]
+           [java.util UUID]))
 
 (def metadata-name? #{:_ref :_type :_objectVersion :_refObjectUUID :_refObjectName :_rallyAPIMajor :_rallyAPIMinor})
 
