@@ -46,19 +46,19 @@
 (deftest can-get-userstory-by-ref
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
-        read-userstory (api/get-object *rest-api* (:metadata/ref userstory))]
+        read-userstory (api/find *rest-api* (:metadata/ref userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest can-delete-userstory
   (let [userstory      (api/create! *rest-api* :userstory {:name (generate-string)})
         _              (api/delete! *rest-api* userstory)
-        read-userstory (api/get-object *rest-api* (:metadata/ref userstory))]
+        read-userstory (api/find *rest-api* (:metadata/ref userstory))]
     (is (nil? read-userstory))))
 
 (deftest query-seq-should-cross-pages
   (let [prefix              (generate-string)
         created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
-        userstory-seq       (api/query-seq *rest-api* :userstory {:start 1 :pagesize 10 :query [:contains :name prefix]})
+        userstory-seq       (api/query *rest-api* :userstory {:start 1 :pagesize 10 :query [:contains :name prefix]})
 
         created-refs        (map :metadata/ref created-userstories)
         queried-refs        (map :metadata/ref userstory-seq)]
@@ -68,7 +68,7 @@
 (deftest query-seq-should-cross-pages-with-default-start-and-pagesizes
   (let [prefix              (generate-string)
         created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
-        userstory-seq       (api/query-seq *rest-api* :userstory {:query [:contains :name prefix]})
+        userstory-seq       (api/query *rest-api* :userstory {:query [:contains :name prefix]})
 
         created-refs        (map :metadata/ref created-userstories)
         queried-refs        (map :metadata/ref userstory-seq)]
@@ -77,7 +77,7 @@
 
 (deftest query-should-handle-order-by-correctly
   (let [created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory {:name (generate-string)})))
-        userstory-seq       (api/query-seq *rest-api* :userstory {:order [:name]})
+        userstory-seq       (api/query *rest-api* :userstory {:order [:name]})
 
         userstory-names     (map :metadata/ref-object-name userstory-seq)
         sorted-names        (sort String/CASE_INSENSITIVE_ORDER userstory-names)]

@@ -5,7 +5,8 @@
             [environ.core :as env]
             [rally-api.data :as data]
             [rally-api.request :as request])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+]])
+  (:refer-clojure :exclude [find]))
 
 (defn- not-found? [error]
   (= error "Cannot find object to read"))
@@ -50,40 +51,45 @@
       (request/set-url ref-or-object)
       do-request))
 
-(defn get-object [rest-api ref-or-object]
-  (-> rest-api
-      (request/set-url ref-or-object)
-      do-request))
-
-(defn query [rest-api uri query-spec]
+(defn query-for-page [rest-api uri start pagesize query-spec]
   (-> rest-api
       (request/set-uri uri)
+      (request/set-query-param :start start)
+      (request/set-query-param :pagesize pagesize)
       (request/merge-query-params query-spec)
       do-request
       :results))
 
-(defn query-seq [rest-api uri {:keys [start pagesize] :as query-spec}]
-  (let [start    (or start 1)
-        pagesize (or pagesize 200)
-        results  (seq (query rest-api uri query-spec))]
-    (when results 
-      (concat results (lazy-seq (query-seq rest-api uri (assoc query-spec :start (+ start pagesize) :pagesize pagesize)))))))
+(defn query
+  ([rest-api uri]
+     (query rest-api uri {}))
+  ([rest-api uri {:keys [start pagesize] :as query-spec}]
+     (let [start    (or start 1)
+           pagesize (or pagesize 200)
+           results  (seq (query-for-page rest-api uri start pagesize query-spec))]
+       (when results 
+         (concat results (lazy-seq (query rest-api uri (assoc query-spec :start (+ start pagesize) :pagesize pagesize))))))))
 
-(defn find-first [rest-api uri query-spec]
-  (-> (query rest-api uri query-spec)
-      first))
+(defn find
+  ([rest-api ref-or-object]
+     (-> rest-api
+         (request/set-url ref-or-object)
+         do-request))
+  ([rest-api uri query-spec]
+     (-> (query rest-api uri query-spec)
+      first)))
 
 (defn find-by-formatted-id [rest-api rally-type formatted-id]
   (let [query-spec {:query [:= :formatted-id formatted-id]
                     :fetch [:description :name :formatted-id :owner :object-id]}]
-    (find-first rest-api rally-type query-spec)))
+    (find rest-api rally-type query-spec)))
 
 (defn current-workspace [rest-api]
-  (let [current-project (get-object rest-api (request/get-current-project rest-api))]
-    (get-object rest-api (:workspace current-project))))
+  (let [current-project (find rest-api (request/get-current-project rest-api))]
+    (find rest-api (:workspace current-project))))
 
 (defn current-project [rest-api]
-  (find-first rest-api :project {:fetch true}))
+  (find rest-api :project {:fetch true}))
 
 (defn current-user [rest-api]
   (-> rest-api
