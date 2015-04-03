@@ -26,7 +26,7 @@
         first
         check-for-rally-errors)))
 
-(defn create-object [rest-api type data]
+(defn create! [rest-api type data]
   (-> rest-api
       (request/set-method :put)
       (request/set-uri type "create")
