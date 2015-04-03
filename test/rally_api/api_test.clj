@@ -32,14 +32,14 @@
 (deftest userstory-can-be-updated
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name (generate-string)})
-        _              (api/update-object *rest-api* userstory {:name userstory-name})
+        _              (api/update! *rest-api* userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest userstory-can-be-updated-without-existing-object
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name (generate-string)})
-        _              (api/update-object *rest-api* (:metadata/ref userstory) {:name userstory-name})
+        _              (api/update! *rest-api* (:metadata/ref userstory) {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 

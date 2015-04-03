@@ -34,7 +34,7 @@
       do-request
       :object))
 
-(defn update-object [rest-api ref-or-object updated-data]
+(defn update! [rest-api ref-or-object updated-data]
   (let [ref  (data/->ref ref-or-object)
         type (or (:metadata/type ref-or-object) (data/rally-ref->clojure-type ref))]
     (-> rest-api
