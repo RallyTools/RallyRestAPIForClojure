@@ -42,10 +42,10 @@
 
 (defn clojure-type->rally-type [type]
   (case type
-    :userstory user-story-rally-type
+    :userstory  user-story-rally-type
     :user-story user-story-rally-type
-    :UserStory user-story-rally-type
-    :security  "security"
+    :UserStory  user-story-rally-type
+    :security   "security"
     (csk/->PascalCaseString type)))
 
 (defn rally-ref->clojure-type [rally-ref]

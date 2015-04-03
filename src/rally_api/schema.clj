@@ -37,9 +37,16 @@
   (-> (type-def rest-api type)
       (get-in [:attributes attribute])))
 
-(defn required-fields [rest-api type]
+(defn filtered-attributes [rest-api type pred]
   (->> (type-def rest-api type)
        :attributes
        vals
-       (filter required-attribute?)
-       (map :element-name)))
+       (filter pred)
+       (map :element-name)
+       sort))
+
+(defn attribute-names [rest-api type]
+  (filtered-attributes rest-api type (constantly true)))
+
+(defn required-attribute-names [rest-api type]
+  (filtered-attributes rest-api type required-attribute?))
