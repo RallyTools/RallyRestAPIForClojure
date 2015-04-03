@@ -14,11 +14,22 @@
    (.startsWith (name n) "_")
    (and (keyword? n) (= "metadata" (namespace n)))))
 
+(defn custom-field-name? [n]
+  (or
+   (.startsWith (name n) "c_")
+   (and (keyword? n) (= "custom" (namespace n)))))
+
 (defn ->rally-case [n]
-  (if (metadata-name? n)
-    (str "_" (csk/->camelCaseString n))
-    (-> (csk/->PascalCaseString n)
-        (.replace "Id" "ID"))))
+  (cond
+   (metadata-name? n)     (str "_" (csk/->camelCaseString n))
+   (custom-field-name? n) (str "c_" (csk/->PascalCaseString n))
+   :else                  (-> (csk/->PascalCaseString n)
+                              (.replace "Id" "ID"))))
+(defn ->clojure-case [k]
+  (cond
+   (metadata-name? k)     (keyword "metadata" (csk/->kebab-case-string k))
+   (custom-field-name? k) (keyword "custom" (csk/->kebab-case-string (.substring (name k) 2)))
+   :else                  (csk/->kebab-case-keyword k)))
 
 (defn ->rally-map [m]
   (let [f (comp keyword ->rally-case)]
@@ -42,17 +53,14 @@
         [_ type]   (re-find type-regex (str rally-ref))]
     (rally-type->clojure-type type)))
 
-(defn ->clojure-key-name [k]
-  (if (metadata-name? k)
-    (keyword "metadata" (csk/->kebab-case-string k))
-    (csk/->kebab-case-keyword k)))
+
 
 (defn- not-nil? [v]
   (not (or (empty? v) (= "null" v))))
 
 (defn ->clojure-map [m]
   (letfn [(transform [[k v]]
-            (let [new-k (->clojure-key-name k)
+            (let [new-k (->clojure-case k)
                   new-v (case new-k
                           :metadata/type            (rally-type->clojure-type v)
                           :metadata/ref-object-uuid (when (not-nil? v) (UUID/fromString v))

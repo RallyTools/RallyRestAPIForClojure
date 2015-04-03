@@ -4,11 +4,19 @@
   (:import [java.util UUID]
            [java.net URI]))
 
-(deftest metadata-name?-should-work-with-rally-case-and-clojure-case-name
+(deftest metadata-name?-should-work-with-rally-case-and-clojure-case-names
   (is (= true (data/metadata-name? "_ref")))
   (is (= true (data/metadata-name? :_ref)))
   (is (= true (data/metadata-name? :metadata/ref)))
-  (is (= false (data/metadata-name? :name))))
+  (is (= false (data/metadata-name? :name)))
+  (is (= false (data/metadata-name? "Name"))))
+
+(deftest custom-field-name?-should-work-with-rally-case-and-clojure-case-names
+  (is (= true (data/custom-field-name? "c_MyCustomField")))
+  (is (= true (data/custom-field-name? :c_MyCustomField)))
+  (is (= true (data/custom-field-name? :custom/my-custom-field)))
+  (is (= false (data/custom-field-name? :name)))
+  (is (= false (data/custom-field-name? "Name"))))
 
 (deftest convert-from-clojure-to-rally-case
   (is (= "ObjectID" (data/->rally-case :object-id)))
@@ -16,7 +24,16 @@
   (is (= "DirectChildrenCount" (data/->rally-case :direct-children-count)))
   (is (= "_ref" (data/->rally-case :metadata/ref)))
   (is (= "FormattedID" (data/->rally-case :formatted-id)))
-  (is (= "_objectVersion" (data/->rally-case :metadata/object-version))))
+  (is (= "_objectVersion" (data/->rally-case :metadata/object-version)))
+  (is (= "c_MyCustomField" (data/->rally-case :custom/my-custom-field))))
+
+(deftest convert-from-rally-to-clojure-case
+  (is (= :object-id (data/->clojure-case "ObjectID")))
+  (is (= :metadata/ref (data/->clojure-case :_ref)))
+  (is (= :metadata/ref (data/->clojure-case "_ref")))
+  (is (= :custom/my-custom-field (data/->clojure-case "c_MyCustomField")))
+  (is (= :custom/my-custom-field (data/->clojure-case :c_MyCustomField)))
+  (is (= :current-project-name (data/->clojure-case "CurrentProjectName"))))
 
 (deftest convert-to-rally-map
   (is (= {:Name "Adam"} (data/->rally-map {:name "Adam"})))
