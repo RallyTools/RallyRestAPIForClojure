@@ -93,6 +93,14 @@
 (deftest relationships-can-be-queried
   (let [created-defects [(api/create! *rest-api* :defect {:name (generate-string)}) (api/create! *rest-api* :defect {:name (generate-string)})]
         userstory       (api/create! *rest-api* :userstory {:name (generate-string)})
-        _               (api/add-to-collection! *rest-api* (:defects userstory) created-defects)
+        _               (api/update-collection! *rest-api* (:defects userstory) :add created-defects)
         defects         (api/query *rest-api* (:defects userstory))]
     (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects))))))
+
+(deftest relationships-can-be-removed
+  (let [created-defects [(api/create! *rest-api* :defect {:name (generate-string)}) (api/create! *rest-api* :defect {:name (generate-string)})]
+        userstory       (api/create! *rest-api* :userstory {:name (generate-string)})
+        _               (api/update-collection! *rest-api* (:defects userstory) :add created-defects)
+        _               (api/update-collection! *rest-api* (:defects userstory) :remove [(first created-defects)])
+        defects         (api/query *rest-api* (:defects userstory))]
+    (is (= [(:metadata/ref-object-name (second created-defects))] (map :metadata/ref-object-name defects)))))
