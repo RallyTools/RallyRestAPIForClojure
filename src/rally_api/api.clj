@@ -60,7 +60,7 @@
       (request/set-url ref-or-object)
       do-request))
 
-(defn query-for-page [rest-api uri start pagesize query-spec]
+(defn- query-for-page [rest-api uri start pagesize query-spec]
   (-> rest-api
       (request/set-uri uri)
       (request/merge-query-params query-spec)
