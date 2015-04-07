@@ -41,10 +41,21 @@ RallyRestAPIForClojure is a Clojure library to access your Rally data. It curren
 (api/query rest-api :user-story {:query [:or [:contains :name "cool"] [:contains :name "exciting"]]})
 ; => ({:metadata/rally-api-major 2,
        :metadata/rally-api-minor 0,
-       :metadata/ref  #<URI http://localhost:7001/slm/webservice/v2.0/hierarchicalrequirement/503114>,
+       :metadata/ref  #<URI http://testing.rallydev.com/hierarchicalrequirement/1234,
        :metadata/ref-object-uuid  #uuid "7e643822-f751-455a-9821-0a5fafe46d3a",
        :metadata/ref-object-name "This feature is really cool",
        :metadata/type :user-story})
+
+;; Add a defect to a user story
+(def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
+(def my-defect (api/create! rest-api :defect {:name "This doesn't work correctly"}))
+(api/update-collection! rest-api (:defects my-user-story) :add [my-defect])
+
+;; Query for a user story's related defects
+(-> (api/query rest-api (:defects my-user-story))
+    first
+    :metadata/ref-object-name)
+; => "This doesn't work correctly"
 ```
 
 ## License
