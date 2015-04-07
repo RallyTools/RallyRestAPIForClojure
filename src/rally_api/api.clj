@@ -111,45 +111,40 @@
       (request/set-uri (keyword "user:current"))
       do-request))
 
-(defn- security-token [rest-api {:keys [username password api-key]}]
+(defn- security-token [rest-api {:keys [username password]}]
   (-> rest-api
       (request/set-basic-auth username password)
       (request/set-uri :security :authorize)
       do-request
       :security-token))
 
-(defn- create-rest-api! [{:keys [api-key] :as credentials} rally-host]
-  (let [connection-manager (conn-mgr/make-reusable-conn-manager {})
-        rest-api           {:request    {:connection-manager connection-manager
-                                         :cookie-store       (cookies/cookie-store)
-                                         :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
-                                                              "X-RallyIntegrationPlatform" (env/env "java.version")
-                                                              "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
-                                         :debug              (or (env/env :debug-rally-rest) false)
-                                         :method             :get
-                                         :as                 :json}
-                            :rally-host rally-host
-                            :middleware client/default-middleware}
-        rest-api           (if api-key
-                             (request/add-headers rest-api {:zsessionid api-key})
-                             (request/set-security-token rest-api (security-token rest-api credentials)))]
-    (request/set-current-project rest-api (current-project rest-api))))
-
 (defn create-rest-api
-  ([username password rally-host]
-   (create-rest-api! {:username username
-                      :password password}
-                     rally-host))
-  ([api-key rally-host]
-   (create-rest-api! {:api-key api-key} rally-host))
   ([]
-   (let [username   (env/env :username)
-         password   (env/env :password)
-         api-key    (env/env :api-key)
-         rally-host (or (env/env :rally-host) "https://rally1.rallydev.com")]
-     (if (and username password)
-       (create-rest-api username password rally-host)
-       (create-rest-api api-key rally-host)))))
+     (let [username   (env/env :username)
+           password   (env/env :password)
+           api-key    (env/env :api-key)]
+       (create-rest-api {:username   username
+                         :password   password
+                         :api-key    api-key})))
+  ([credentials]
+     (let [rally-host (or (env/env :rally-host) "https://rally1.rallydev.com")]
+       (create-rest-api credentials rally-host)))
+  ([{:keys [api-key] :as credentials} rally-host]
+     (let [connection-manager (conn-mgr/make-reusable-conn-manager {})
+           rest-api           {:request    {:connection-manager connection-manager
+                                            :cookie-store       (cookies/cookie-store)
+                                            :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
+                                                                 "X-RallyIntegrationPlatform" (env/env "java.version")
+                                                                 "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
+                                            :debug              (or (env/env :debug-rally-rest) false)
+                                            :method             :get
+                                            :as                 :json}
+                               :rally-host rally-host
+                               :middleware client/default-middleware}
+           rest-api           (if api-key
+                                (request/add-headers rest-api {:zsessionid api-key})
+                                (request/set-security-token rest-api (security-token rest-api credentials)))]
+    (request/set-current-project rest-api (current-project rest-api)))))
 
 (defn shutdown-rest-api [rest-api]
   (conn-mgr/shutdown-manager (get-in rest-api [:request :connection-manager]))
