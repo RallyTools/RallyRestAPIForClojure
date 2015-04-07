@@ -1,4 +1,4 @@
-(defproject rally-rest-api "0.1.0"
+(defproject rally/rest-api "0.1.0"
   :description "A toolkit wrapping Rally's REST webservice for Clojure"
   :url "https://github.com/RallyTools/RallyRestAPIForClojure"
   :license {:name "MIT License"

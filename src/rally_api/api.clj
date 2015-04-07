@@ -18,7 +18,7 @@
      (some not-found? errors) nil
      :else                    (throw+ response "rally-errors: %s" errors))))
 
-(defn- do-request [{:keys [middleware request]}]
+(defn do-request [{:keys [middleware request]}]
   (client/with-middleware middleware
     (-> (client/request request)
         :body
