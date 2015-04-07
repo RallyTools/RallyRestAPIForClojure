@@ -15,6 +15,8 @@
 
                  [slingshot "0.12.2"]]
   :jvm-opts ["-Xmx1g"]
+  :test-selectors {:default     (complement :integration)
+                   :integration :integration}
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[criterium "0.4.3"]
                                   [crypto-random "1.2.0"]]}})
