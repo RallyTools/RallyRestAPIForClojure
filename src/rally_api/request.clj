@@ -68,8 +68,8 @@
 
 (defn set-body-as-map [rest-api clojure-type data]
   (let [rally-type (data/clojure-type->rally-type clojure-type)
-        body-map   {rally-type data}]
-    (assoc-in rest-api [:request :body] (json/generate-string (data/->rally-map body-map)))))
+        body-map   {rally-type (data/->rally-map data)}]
+    (assoc-in rest-api [:request :body] (json/generate-string body-map))))
 
 (defn get-body [rest-api]
   (get-in rest-api [:request :body]))

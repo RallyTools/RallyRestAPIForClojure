@@ -104,3 +104,14 @@
         _               (api/update-collection! *rest-api* (:defects userstory) :remove [(first created-defects)])
         defects         (api/query *rest-api* (:defects userstory))]
     (is (= [(:metadata/ref-object-name (second created-defects))] (map :metadata/ref-object-name defects)))))
+
+(deftest parent-can-be-set-on-userstory
+  (let [parent (api/create! *rest-api* :userstory {:name (generate-string)})
+        child  (api/create! *rest-api* :userstory {:name (generate-string) :parent parent})]
+    (is (= (:metadata/ref parent) (:metadata/ref (:parent child))))))
+
+(deftest parent-can-be-updated-on-userstory
+  (let [parent        (api/create! *rest-api* :userstory {:name (generate-string)})
+        child         (api/create! *rest-api* :userstory {:name (generate-string)})
+        updated-child (api/update! *rest-api* child {:parent parent})]
+    (is (= (:metadata/ref parent) (:metadata/ref (:parent updated-child))))))

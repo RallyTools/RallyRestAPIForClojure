@@ -37,7 +37,10 @@
 
 (deftest convert-to-rally-map
   (is (= {:Name "Adam"} (data/->rally-map {:name "Adam"})))
-  (is (= {:ObjectID 123} (data/->rally-map {:object-id 123}))))
+  (is (= {:ObjectID 123} (data/->rally-map {:object-id 123})))
+  (is (= {:Name "Jane", :Parent "http://localhost/slm/webservice/v2.0/defect/1234"}
+         (data/->rally-map {:name "Jane", :parent {:metadata/ref "http://localhost/slm/webservice/v2.0/defect/1234" :name "Junk"}})))
+  (is (= [{:_ref "http://localhost/slm/webservice/v2.0/defect/1234"}] (data/->rally-map [{:metadata/ref "http://localhost/slm/webservice/v2.0/defect/1234"}]))))
 
 (deftest convert-clojure-type-to-rally-type
   (is (= data/user-story-rally-type (data/clojure-type->rally-type :user-story)))

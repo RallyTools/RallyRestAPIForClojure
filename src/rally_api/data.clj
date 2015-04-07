@@ -32,8 +32,15 @@
    :else                  (csk/->kebab-case-keyword k)))
 
 (defn ->rally-map [m]
-  (let [f (comp keyword ->rally-case)]
-    (utils/transform-keys f m)))
+  (if (sequential? m)
+    (map ->rally-map m)
+    (let [f         (comp keyword ->rally-case)
+          transform (fn [[k v]]
+                      (let [new-k (f k)]
+                        (if (map? v)
+                          [new-k (:metadata/ref v)]
+                          [new-k v])))]
+      (into {} (map transform m)))))
 
 (defn rally-type->clojure-type [type]
   (if (.equalsIgnoreCase type user-story-rally-type)
