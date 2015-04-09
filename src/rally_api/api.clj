@@ -143,8 +143,9 @@
                                :middleware client/default-middleware}
            rest-api           (if api-key
                                 (request/add-headers rest-api {:zsessionid api-key})
-                                (request/set-security-token rest-api (security-token rest-api credentials)))]
-    (request/set-current-project rest-api (current-project rest-api)))))
+                                (request/set-security-token rest-api (security-token rest-api credentials)))
+           current-project    (find rest-api :project {})]
+    (request/set-current-project rest-api current-project))))
 
 (defn shutdown-rest-api [rest-api]
   (conn-mgr/shutdown-manager (get-in rest-api [:request :connection-manager]))
