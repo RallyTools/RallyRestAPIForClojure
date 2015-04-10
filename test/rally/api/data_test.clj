@@ -1,5 +1,5 @@
-(ns rally-api.data-test
-  (:require [rally-api.data :as data]
+(ns rally.api.data-test
+  (:require [rally.api.data :as data]
             [clojure.test :refer :all])
   (:import [java.util UUID]
            [java.net URI]))

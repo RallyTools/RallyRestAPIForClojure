@@ -1,4 +1,4 @@
-(ns rally-api.data
+(ns rally.api.data
   (:require [camel-snake-kebab.core :as csk]
             [camel-snake-kebab.extras :as utils]
             [clojure.string :as string]

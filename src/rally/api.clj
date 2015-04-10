@@ -1,10 +1,10 @@
-(ns rally-api.api
+(ns rally.api
   (:require [clj-http.client :as client]
             [clj-http.conn-mgr :as conn-mgr]
             [clj-http.cookies :as cookies]
             [environ.core :as env]
-            [rally-api.data :as data]
-            [rally-api.request :as request])
+            [rally.api.data :as data]
+            [rally.api.request :as request])
   (:use [slingshot.slingshot :only [throw+]])
   (:refer-clojure :exclude [find]))
 

@@ -1,4 +1,4 @@
-(defproject com.rallydev/rest-api "0.1.1"
+(defproject com.rallydev/rest-api "0.3.0"
   :description "A toolkit wrapping Rally's REST webservice for Clojure"
   :url "https://github.com/RallyTools/RallyRestAPIForClojure"
   :license {:name "MIT License"
@@ -9,7 +9,6 @@
 
                  [environ "1.0.0"]
 
-                 [org.clojure/clojure "1.6.0"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/core.memoize "0.5.6"]
 
@@ -19,4 +18,5 @@
                    :integration :integration}
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[criterium "0.4.3"]
+                                  [org.clojure/clojure "1.6.0"]
                                   [crypto-random "1.2.0"]]}})

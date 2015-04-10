@@ -1,8 +1,8 @@
-(ns rally-api.request
+(ns rally.api.request
   (:require [cheshire.core :as json]
             [cheshire.generate :as encoding]
             [clojure.string :as string]
-            [rally-api.data :as data]))
+            [rally.api.data :as data]))
 
 (encoding/add-encoder java.net.URI encoding/encode-str)
 

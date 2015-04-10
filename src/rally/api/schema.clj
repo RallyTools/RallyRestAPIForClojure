@@ -1,8 +1,8 @@
-(ns rally-api.schema
+(ns rally.api.schema
   (:require [clojure.walk :as walk]
-            [rally-api.api :as api]
-            [rally-api.data :as data]
-            [rally-api.request :as request]))
+            [rally.api :as api]
+            [rally.data :as data]
+            [rally.request :as request]))
 
 (defn- required-attribute? [{:keys [read-only required]}]
   (and (not read-only) required))

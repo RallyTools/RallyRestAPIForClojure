@@ -1,5 +1,5 @@
-(ns rally-api.request-test
-  (:require [rally-api.request :as request]
+(ns rally.api.request-test
+  (:require [rally.api.request :as request]
             [clojure.test :refer :all])
   (:import [java.net URI]))
 

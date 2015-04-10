@@ -1,9 +1,9 @@
-(ns rally-api.api-test 
+(ns rally.api-test 
   (:require [clojure.test :refer :all]
             [clojure.set :as set]
             [crypto.random :as random]
             [environ.core :as env]
-            [rally-api.api :as api]))
+            [rally.api :as api]))
 
 (def ^:dynamic *rest-api*)
 
