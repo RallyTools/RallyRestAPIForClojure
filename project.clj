@@ -1,5 +1,5 @@
-(defproject com.rallydev/rest-api "0.3.0"
-  :description "A toolkit wrapping Rally's REST webservice for Clojure"
+(defproject com.rallydev/clj-rally "0.4.0"
+  :description "A clojure library for interating with Rally's webservice API."
   :url "https://github.com/RallyTools/RallyRestAPIForClojure"
   :license {:name "MIT License"
             :url "http://en.wikipedia.org/wiki/MIT_License"}
@@ -16,6 +16,7 @@
   :jvm-opts ["-Xmx1g"]
   :test-selectors {:default     (complement :integration)
                    :integration :integration}
+  :plugins [[lein-pprint "1.1.1"]]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[criterium "0.4.3"]
                                   [org.clojure/clojure "1.6.0"]
