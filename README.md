@@ -2,6 +2,8 @@
 
 RallyRestAPIForClojure is a Clojure library to access your Rally data. It currently supports querying, creates, reads, updates and deletes. If you would like more inforamtion on the Rally Rest API please see Rally's [Web Services API documentation](https://rally1.rallydev.com/slm/doc/webservice).
 
+[![Build Status](https://travis-ci.org/RallyTools/RallyRestAPIForClojure.svg?branch=master)](https://travis-ci.org/RallyTools/RallyRestAPIForClojure)
+
 ## Examples
 
 ```clojure
