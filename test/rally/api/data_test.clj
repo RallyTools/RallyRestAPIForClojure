@@ -90,6 +90,18 @@
   (let [query [:= :formatted-id "S80221"]]
     (is (= "(FormattedID = \"S80221\")" (data/create-query query)))))
 
+(deftest create-query-should-translate-objects
+  (let [query [:= :parent {:metadata/ref "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234"}]]
+    (is (= "(Parent = https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234)" (data/create-query query)))))
+
+(deftest create-query-should-translate-uris
+  (let [query [:= :parent (URI. "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234")]]
+    (is (= "(Parent = https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234)" (data/create-query query)))))
+
+(deftest create-query-should-translate-uri-string
+  (let [query [:= :parent "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234"]]
+    (is (= "(Parent = https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234)" (data/create-query query)))))
+
 (deftest create-query-should-do-proper-nesting
   (is (= "((FormattedID = \"S123\") AND (Name contains \"foo\"))"
          (data/create-query [:and
@@ -119,6 +131,18 @@
                               [:contains :email "test.com"]]]))))
 
 (deftest convert-to-ref
-  (let [ref-str "http://localhost:7001/slm/webservice/v2.0/defect"]
+  (let [ref-str   "http://localhost:7001/slm/webservice/v2.0/defect"
+        tasks-ref (str ref-str "/tasks")]
     (is (= ref-str (data/->ref ref-str)))
-    (is (= ref-str (data/->ref {:metadata/ref ref-str})))))
+    (is (= ref-str (data/->ref {:metadata/ref ref-str})))
+    (is (= tasks-ref (data/->ref [{:metadata/ref ref-str} :tasks])))
+    (is (= tasks-ref (data/->ref [ref-str :tasks])))
+    (is (= tasks-ref (data/->ref [(URI. ref-str) :tasks])))
+    (is (= tasks-ref (data/->ref [(URI. ref-str) "tasks"])))))
+
+(deftest t-uri-like?
+  (is (true? (data/uri-like? "http://localhost:7001/slm/webservice/v2.0/defect")))
+  (is (false? (data/metadata-name? :name)))
+  (is (true? (data/uri-like? {:metadata/ref "http://localhost:7001/slm/webservice/v2.0/defect"})))
+  (is (true? (data/uri-like? [{:metadata/ref "http://localhost:7001/slm/webservice/v2.0/defect"} :tasks])))
+  (is (true? (data/uri-like? (URI. "http://localhost:7001/slm/webservice/v2.0/defect")))))

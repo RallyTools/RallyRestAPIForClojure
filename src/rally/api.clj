@@ -71,12 +71,13 @@
 (defn query
   ([rest-api uri]
      (query rest-api uri {}))
-  ([rest-api uri {:keys [start pagesize] :as query-spec}]
-     (let [start              (or start 1)
-           pagesize           (or pagesize 200)
-           next-start         (+ start pagesize)
-           page               (query-for-page rest-api uri start pagesize query-spec)
-           total-result-count (:total-result-count page)]
+  ([rest-api uri query-spec]
+   (let [query-spec         (if (vector? query-spec) {:query query-spec} query-spec)
+         start              (or (:start query-spec) 1)
+         pagesize           (or (:pagesize query-spec) 200)
+         next-start         (+ start pagesize)
+         page               (query-for-page rest-api uri start pagesize query-spec)
+         total-result-count (:total-result-count page)]
        (concat (:results page)
                (when (<= next-start total-result-count)
                  (lazy-seq (query rest-api uri (assoc query-spec :start next-start))))))))

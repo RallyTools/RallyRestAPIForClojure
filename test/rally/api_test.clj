@@ -115,3 +115,23 @@
         child         (api/create! *rest-api* :userstory {:name (generate-string)})
         updated-child (api/update! *rest-api* child {:parent parent})]
     (is (= (:metadata/ref parent) (:metadata/ref (:parent updated-child))))))
+
+(deftest ^:integration vector-is-converted-to-query-spec
+  (let [prefix              (generate-string)
+        created-userstories (doall (repeatedly 21 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
+        userstory-seq       (api/query *rest-api* :userstory [:contains :name prefix])
+
+        created-refs        (map :metadata/ref created-userstories)
+        queried-refs        (map :metadata/ref userstory-seq)]
+
+    (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
+
+(deftest ^:integration relationships-can-be-built-from-ref
+  (let [parent (api/create! *rest-api* :userstory {:name (generate-string)})
+        child  (api/create! *rest-api* :userstory {:name (generate-string) :parent parent})]
+    (= [child] (api/query *rest-api* [parent :children]))))
+
+(deftest ^:integration objects-can-be-used-queries
+  (let [parent (api/create! *rest-api* :userstory {:name (generate-string)})
+        child  (api/create! *rest-api* :userstory {:name (generate-string) :parent parent})]
+    (= [child] (api/query *rest-api* :userstory [:= :parent parent]))))

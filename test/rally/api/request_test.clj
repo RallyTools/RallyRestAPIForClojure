@@ -6,6 +6,7 @@
 (deftest to-uri-string-should-handle-all-the-cases
   (let [rally-host "http://localhost:7001"]
     (is (= (str rally-host "/slm/webservice/v2.0/Defect") (request/->uri-string rally-host :defect)))
+    (is (= (str rally-host "/slm/webservice/v2.0/defect/123/tasks") (request/->uri-string rally-host [(str rally-host "/slm/webservice/v2.0/defect/123") :tasks])))
     (is (= (str rally-host "slm/schema/v2.0/workspace/123" (request/->uri-string rally-host [:slm :schema :v2.0 :workspace "123"]))))
     (is (= (str rally-host "/slm/webservice/v2.0/defect/123") (request/->uri-string rally-host {:metadata/ref (str rally-host "/slm/webservice/v2.0/defect/123")})))
     (is (= (str rally-host "/slm/webservice/v2.0/defect/123") (request/->uri-string rally-host (str rally-host "/slm/webservice/v2.0/defect/123"))))

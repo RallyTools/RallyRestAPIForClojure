@@ -78,7 +78,21 @@
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))
 
 (defn ->ref [ref-or-object]
-  (or (:metadata/ref ref-or-object) ref-or-object))
+  (let [to-str (fn [v] (if (keyword? v) (name v) (str v)))]
+    (cond
+      (sequential? ref-or-object)
+      (->> ref-or-object
+           (map ->ref)
+           (map to-str)
+           (string/join "/"))
+
+      :default
+      (to-str (or (:metadata/ref ref-or-object) ref-or-object)))))
+
+(defn uri-like? [thing]
+  (-> (->ref thing)
+      str
+      (.startsWith "http")))
 
 (defn ->oid [value]
   (-> value
@@ -104,9 +118,13 @@
 (declare create-query)
 (def ^:private logic-expression? #{:or :and})
 
+(defn- translate-value [value]
+  (cond
+    (string? value) (if (.startsWith value "http") value (str "\"" value "\""))
+    :else           (->ref value)))
+
 (defn- create-expression [[operator left right]]
-  (let [right (if (string? right) (str "\"" right "\"") right)]
-    (str "(" (->rally-case left) " " (name operator) " " right ")")))
+  (str "(" (->rally-case left) " " (name operator) " " (translate-value right) ")"))
 
 (defn- group-expressions [logic-expression expression]
   (let [logic-str (string/upper-case (name logic-expression))]

@@ -7,14 +7,11 @@
 (encoding/add-encoder java.net.URI encoding/encode-str)
 
 (defn ->uri-string [rally-host uri]
-  (let [seq->uri (fn [s]
-                   (->> (cons rally-host s)
-                        (map name)
-                        (string/join "/")))]
-    (cond
-     (keyword? uri)   (seq->uri [:slm :webservice :v2.0 (data/clojure-type->rally-type uri)])
-     (sequential? uri) (seq->uri uri)
-     :else (str (data/->ref uri)))))
+  (cond
+    (keyword? uri)       (data/->ref [rally-host :slm :webservice :v2.0 (data/clojure-type->rally-type uri)])
+    (data/uri-like? uri) (data/->ref uri)
+    (sequential? uri)    (data/->ref (cons rally-host uri))
+    :else                (data/->ref uri)))
 
 (defn set-query-param [rest-api name value]
   (assoc-in rest-api [:request :query-params name] value))
