@@ -27,13 +27,16 @@
         first
         check-for-rally-errors)))
 
-(defn create! [rest-api type data]
-  (-> rest-api
-      (request/set-method :put)
-      (request/set-uri type "create")
-      (request/set-body-as-map type data)
-      do-request
-      :object))
+(defn create!
+  ([rest-api type] (create! rest-api type {}))
+  ([rest-api type data]
+   (let [default-data-fn (request/get-default-data-fn rest-api)]
+     (-> rest-api
+         (request/set-method :put)
+         (request/set-uri type "create")
+         (request/set-body-as-map type (default-data-fn type data))
+         do-request
+         :object))))
 
 (defn update! [rest-api ref-or-object updated-data]
   (let [ref  (data/->ref ref-or-object)

@@ -71,5 +71,11 @@
 (defn get-body [rest-api]
   (get-in rest-api [:request :body]))
 
+(defn set-default-data-fn [rest-api default-data-fn]
+  (assoc rest-api :default-data-fn default-data-fn))
+
+(defn get-default-data-fn [rest-api]
+  (:default-data-fn rest-api (fn [type values] values)))
+
 (defn debug [rest-api]
   (assoc-in rest-api [:request :debug] true))

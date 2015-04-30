@@ -3,7 +3,8 @@
             [clojure.set :as set]
             [crypto.random :as random]
             [environ.core :as env]
-            [rally.api :as api]))
+            [rally.api :as api]
+            [rally.api.request :as request]))
 
 (def ^:dynamic *rest-api*)
 
@@ -21,6 +22,13 @@
 (deftest ^:integration userstory-can-be-created
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})]
+    (is (= (:metadata/ref-object-name userstory) userstory-name))))
+
+(deftest ^:integration userstory-can-be-created-with-default-data
+  (let [userstory-name (generate-string)
+        default-data   (fn [type values] (merge {:name userstory-name} values))
+        rest-api       (request/set-default-data-fn *rest-api* default-data)
+        userstory      (api/create! rest-api :userstory)]
     (is (= (:metadata/ref-object-name userstory) userstory-name))))
 
 (deftest ^:integration userstory-can-be-queried-by-formatted-id
