@@ -102,6 +102,10 @@
   (let [query [:= :parent "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234"]]
     (is (= "(Parent = https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234)" (data/create-query query)))))
 
+(deftest create-query-should-handle-nested-properties
+  (is (= "(Parent.Name = \"Foo\")" (data/create-query [:= :parent.name "Foo"])))
+  (is (= "(Parent.TotalResults = 0)" (data/create-query [:= :parent.total-results 0]))))
+
 (deftest create-query-should-do-proper-nesting
   (is (= "((FormattedID = \"S123\") AND (Name contains \"foo\"))"
          (data/create-query [:and

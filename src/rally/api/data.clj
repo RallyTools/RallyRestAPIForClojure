@@ -124,7 +124,10 @@
     :else           (->ref value)))
 
 (defn- create-expression [[operator left right]]
-  (str "(" (->rally-case left) " " (name operator) " " (translate-value right) ")"))
+  (let [lhs (->> (string/split (name left) #"\.")
+                 (map ->rally-case)
+                 (string/join "."))]
+    (str "(" lhs " " (name operator) " " (translate-value right) ")")))
 
 (defn- group-expressions [logic-expression expression]
   (let [logic-str (string/upper-case (name logic-expression))]

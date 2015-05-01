@@ -105,6 +105,13 @@
         defects         (api/query *rest-api* (:defects userstory))]
     (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects))))))
 
+(deftest ^:integration nested-relationships-can-be-queried
+  (let [parent-name (generate-string)
+        parent      (api/create! *rest-api* :userstory {:name parent-name})
+        child       (api/create! *rest-api* :userstory {:name (generate-string) :parent parent})
+        found-child (first (api/query *rest-api* :userstory [:= :parent.name parent-name]))]
+    (is (= (:metadata/ref child) (:metadata/ref found-child)))))
+
 (deftest ^:integration relationships-can-be-removed
   (let [created-defects [(api/create! *rest-api* :defect {:name (generate-string)}) (api/create! *rest-api* :defect {:name (generate-string)})]
         userstory       (api/create! *rest-api* :userstory {:name (generate-string)})
