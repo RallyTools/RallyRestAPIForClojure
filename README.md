@@ -100,6 +100,9 @@ Query specs are modeled after [honey-sql](https://github.com/jkk/honeysql). Let'
                                   [:or [:= :state "Open"]
                                        [:= :state "In-Progress"]]])
 ;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=((Name contains "Foo") AND ((State = "Open") OR (State = "In-Progress")))
+
+(api/query rest-api :userstory [:= :parent.name "Foo"])
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/HierarchicalRequirement?query=(Parent.Name = "Foo")
 ```
 
 Query specs can also contain information like `pagesize` or `start`.
