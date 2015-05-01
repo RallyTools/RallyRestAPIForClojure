@@ -23,9 +23,9 @@ or with an API key.
 ### Querying
 The rest API is written in a way that would be comfortable to most clojure developers. There are three major parts to the query api.
 
-1. [Rally Keyword -> Clojure Keyword Translation](#Rally_Keyword_Clojure_Keyword_Translation)
-2. [Query Specs](#Query_Specs)
-3. [URI Generation](#URI_Generation)
+1. [Rally Keyword -> Clojure Keyword Translation](#rally-keyword---clojure-keyword-tranlation)
+2. [Query Specs](#query-specs)
+3. [URI Generation](#uri-generation)
 
 Before we get into all of the details, let's take a look at a simple example. We are going to query for all the defects in your default project.
 
