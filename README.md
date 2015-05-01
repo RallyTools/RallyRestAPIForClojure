@@ -140,14 +140,14 @@ Almost anything reasonable can be used as an URI in the API.
 ;; Create a user story
 (api/create! rest-api :user-story {:name "This feature is really cool"})
 ; => {:description "",
-      :formatted-id "US1",
-      :tags {:metadata/rally-api-major 2,
-             :metadata/rally-api-minor 0,
-             :metadata/ref  #<URI http://testing.rallydev.com/HierarchicalRequirement/1234/Tags,
-             :metadata/type :tag,
-             :metadata/tags-name-array [],
-             :count 0},
-      .... }
+;     :formatted-id "US1",
+;     :tags {:metadata/rally-api-major 2,
+;            :metadata/rally-api-minor 0,
+;            :metadata/ref  #<URI http://testing.rallydev.com/HierarchicalRequirement/1234/Tags,
+;            :metadata/type :tag,
+;            :metadata/tags-name-array [],
+;            :count 0},
+;     .... }
 ```
 The API allows "defaulting" of data during `api/create!`. If you want to default data, then you will need to provide `default-data-fn`. The `default-data-fn` is a function
 that takes 2 parameters. The parameters are a type and a data map. The type is the data type in which the user is trying to create (`:defect`, `:task`, ...) The data map is the map of data that will be used to create the object.
