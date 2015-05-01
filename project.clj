@@ -5,12 +5,9 @@
             :url "http://en.wikipedia.org/wiki/MIT_License"}
   :dependencies [[camel-snake-kebab "0.3.1" :exclusions [org.clojure/clojure]]
                  
-                 [clj-http "1.0.1"]
+                 [clj-http "1.1.1"]
 
                  [environ "1.0.0"]
-
-                 [org.clojure/core.cache "0.6.4"]
-                 [org.clojure/core.memoize "0.5.6"]
 
                  [slingshot "0.12.2"]]
   :jvm-opts ["-Xmx1g"]
