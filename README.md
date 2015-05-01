@@ -19,13 +19,13 @@ or with an API key.
 ```
 
 ### Querying
-The rest API is written in a way that should be comfortable to most Clojure developers. There are three major parts to the query api.
+The query API is written in a way that should be comfortable to most Clojure developers. There are three major parts to the query API.
 
 1. [Rally Keyword -> Clojure Keyword Translation](#rally-keyword---clojure-keyword-tranlation)
 2. [Query Specs](#query-specs)
 3. [URI Generation](#uri-generation)
 
-Before we get into all of the details, let's take a look at a simple example. We are going to query for all the defects in your default project.
+Before we get into the details, let's take a look at a simple example.
 
 ```clojure
 (first (api/query rest-api :defect)
@@ -37,16 +37,16 @@ Before we get into all of the details, let's take a look at a simple example. We
 ;     :metadata/type :defect}
 ```
 
-This simple query gets translated into making a GET request to the URL "http://rally1.rallydev.com/slm/webservice/v2.0/Defect".
+This simple query gets translated into the URL `http://rally1.rallydev.com/slm/webservice/v2.0/Defect`.
 
 A couple of things to notice about this first example:
 * The keyword `:defect` is translated into `"Defect"`
 * The results of the query are returned as a sequence of maps.
 * The keys of each of the maps have been translated into clojure idiomatic keywords.
-* api/query returns a lazy list of all the paged results.
+* api/query returns a lazy seq of all the paged results.
 
 #### Rally Keyword -> Clojure Keyword Tranlation
-The rest API tries to make working with Rally in Clojure seem natrual to a Clojure developer. Most of the translations are done with a library called [camel-snake-kebab](https://github.com/qerub/camel-snake-kebab).
+The rest API tries to make working with Rally in Clojure seem natrual. Most of the translations Rally->Clojure and Clojure->Rally are done with a library called [camel-snake-kebab](https://github.com/qerub/camel-snake-kebab).
 When going from Rally -> Clojure we use the [->kebab-case-keyword](https://github.com/qerub/camel-snake-kebab/blob/stable/src/camel_snake_kebab/core.cljx#L20) translation.
 
 ```clojure
@@ -57,10 +57,10 @@ When going from Rally -> Clojure we use the [->kebab-case-keyword](https://githu
 ; => :current-project-name
 ```
 
-The Rally -> Clojure translation does a little more than just change case. There are three types of data that are returned in a Rally object: built in, custom, metadata.
+The Rally->Clojure translation does a little more than just change case. There are three types of data that are returned in a Rally object: built in, custom and metadata fields.
 The translation code handles each of these types of data a little differently.
 
-In Rally, pieces of metadata start with an `_` (underscore). Custom fields start with a `c_`. The API translates each of these two data types into keywords with namespace that
+In Rally, metadata fields start with an `_` (underscore). Custom fields start with a `c_`. The API translates each of these two data types into keywords with namespace that
 represent their meaning.
 
 ```clojure
@@ -84,8 +84,7 @@ As you might guess, the API has the reverse function.
 ; => "c_MyCustomField"
 ```
 
-These translations are used when writing queries and getting results. All object fields are translated using the `data/->clojure-case` function before return the results to the caller.
-The `data/->rally-case` function is used when translating queries to their proper Rally format.
+These translations are used when writing queries and returning results. All object fields are translated using the `data/->clojure-case` function before return the results to the caller. The `data/->rally-case` function is used when translating queries to their proper Rally format.
 
 #### Query Specs
 Query specs are modeled after [honey-sql](https://github.com/jkk/honeysql). Let's look at a couple of examples to get the hang of it.
@@ -150,9 +149,8 @@ Almost anything reasonable can be used as an URI in the API.
              :count 0},
       .... }
 ```
-The API allows "defaulting" of data during data creation. If you want to default data, then you will need to provide `default-data-fn`. The `default-data-fn` is a function
-that takes 2 parameters a type and a data map. The type is the type in which the user is trying to create (`:defect`, `:task`, ...) The data map is the map of data that will be
-used to create the object.
+The API allows "defaulting" of data during `api/create!`. If you want to default data, then you will need to provide `default-data-fn`. The `default-data-fn` is a function
+that takes 2 parameters. The parameters are a type and a data map. The type is the data type in which the user is trying to create (`:defect`, `:task`, ...) The data map is the map of data that will be used to create the object.
 ```clojure
 (let [default-name (fn [type data] (merge {:name "Foo"} data))]
   (-> rest-api
