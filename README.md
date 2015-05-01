@@ -6,19 +6,30 @@ RallyRestAPIForClojure is a Clojure library to access your Rally data. It curren
 
 ## Examples
 
+### Creating a REST API
+Creating a rest API. The rest API is the base object of the Clojure API for Rally. An API can be created with a username/password
+or with an API key.
+
 ```clojure
 (require '[rally-api.api :as api])
 
 (def rest-api (api/create-rest-api {:username "me@mycompany.com" :password "supersecret"}))
 ; => #'user/rest-api
 
-;; Query for all the defects in your default project.
-;; 
-;; Notice that results have been returned in a idiomatic clojure format.
-;; Rally returns several pieces of metadata for each object returned. In the regular Rally rest results, metadata is denoted by an
-;; underscore. The api translates _ref to :metadata/ref. All pieces of metadata are translated in much the same way.
-;;
-;; api/query returns a lazy sequence that takes care of paging through all the results of your query.
+(def rest-api (api/create-rest-api {:api-key "mysecret key"}))
+; => #'user/rest-api
+```
+
+### Querying
+The rest API is written in a way that would be comfortable to most clojure developers. There are three major parts to the query api.
+
+1. [Rally Keyword -> Clojure Keyword Translation](#Rally_Keyword_Clojure_Keyword_Translation)
+2. [Query Specs](#Query_Specs)
+3. [URI Generation](#URI_Generation)
+
+Before we get into all of the details, let's take a look at a simple example. We are going to query for all the defects in your default project.
+
+```clojure
 (first (api/query rest-api :defect)
 ; => {:metadata/rally-api-major 2,
       :metadata/rally-api-minor 0,
@@ -26,7 +37,109 @@ RallyRestAPIForClojure is a Clojure library to access your Rally data. It curren
       :metadata/ref-object-uuid #uuid "f5f770f5-d1e9-4dc7-847a-fd9164d93127",
       :metadata/ref-object-name "stuff is broken",
       :metadata/type :defect}
+```
 
+This simple query gets translated into making a GET request to the URL "http://rally1.rallydev.com/slm/webservice/v2.0/Defect".
+
+A couple of things to notice about this first example:
+* The keyword :defect is translated into "Defect"
+* The results of the query are returned as a sequence of maps.
+* The keys of each of the maps have been translated into clojure idiomatic keywords.
+* api/query returns a lazy list of all the paged results.
+
+#### Rally Keyword -> Clojure Keyword Tranlation
+The rest API tries to make working with Rally in Clojure seem natrual to the Clojure developer. Most of the translations are done with a library called [camel-snake-kebab](https://github.com/qerub/camel-snake-kebab).
+When going from Rally -> Clojure we use the [->kebab-case-keyword](https://github.com/qerub/camel-snake-kebab/blob/stable/src/camel_snake_kebab/core.cljx#L20) translation.
+
+```clojure
+(data/->clojure-case "Defect")
+; => :defect
+
+(data/->clojure-case "CurrentProjectName")
+; => :current-project-name
+```
+
+The Rally -> Clojure translation does a little more than just change case. There are three types of data that are returned in a Rally object: built in, custom, metadata.
+The translation code handles each of these types of data a little differently.
+
+In Rally, pieces of metadata start with an _ (underscore). Custom fields start with a c_. The API translates each of these two data types into keywords with namespace that
+represent their meaning.
+
+```clojure
+(data/->clojure-case "_ref")
+; => :metadata/ref
+
+(data/->clojure-case "c_MyCustomField")
+; => :custom/my-custom-field
+```
+
+As you might guess, the API has the reverse function.
+
+```clojure
+(data/->rally-case :defect)
+; => "Defect"
+(data/->rally-case :current-project-name)
+; => "CurrentProjectName"
+(data/->rally-case :metadata/ref)
+; => "_ref"
+(data/->rally-case :custom/my-custom-field)
+; => "c_MyCustomField"
+```
+
+These translations are used when writing queries and getting results. All object fields are translated using the data/->clojure-case function before return the results to the caller.
+The data/->rally-case function is used when translating queries to their proper Rally format.
+
+#### Query Specs
+Query specs are modeled after [honey-sql](https://github.com/jkk/honeysql). Let's look at a couple of examples to get the hang of it.
+
+```clojure
+(api/query rest-api :defect [:contains :name "Foo"])
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=(Name contains "Foo")
+
+(api/query rest-api :defect [:or [:= :name "Foo"] [:= :name "Junk"]])
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=((Name = "Foo") OR (Name = "Junk"))
+
+(api/query rest-api :defect [:and [:contains :name "Foo"]
+                                  [:or [:= :state "Open"]
+                                       [:= :state "In-Progress"]]])
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=((Name contains "Foo") AND ((State = "Open") OR (State = "In-Progress")))
+```
+
+Query specs can also contain information like pagesize or start.
+
+```clojure
+(api/query rest-api :defect {:query [:= :name "Foo"] :pagesize 10})
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=(Name = "Foo")&pagesize=10
+```
+
+#### URI Generation
+Almost anything reasonable can be used as an URI in the API.
+
+```clojure
+(api/query rest-api :defect)
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect
+
+(api/query rest-api :userstory)
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/HierarchicalRequirement
+
+(api/query rest-api "http://rally1.rallydev.com/slm/webservice/v2.0/defect")
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect
+
+(def my-defect (api/create! rest-api :defect {:name "foo"}))
+(api/query rest-api (:tasks my-defect))
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect/123/tasks
+
+(def my-defect (api/create! rest-api :defect {:name "foo"}))
+(api/query rest-api [my-defect :tasks])
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect/123/tasks
+
+(def my-defect (api/create! rest-api :defect {:name "foo"}))
+(api/find rest-api my-defect)
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect/123
+```
+
+### Creating Data
+```clojure
 ;; Create a user story
 (api/create! rest-api :user-story {:name "This feature is really cool"})
 ; => {:description "",
@@ -38,26 +151,37 @@ RallyRestAPIForClojure is a Clojure library to access your Rally data. It curren
              :metadata/tags-name-array [],
              :count 0},
       .... }
-      
-;; Query for all user stories whose name contains cool or exciting
-(api/query rest-api :user-story {:query [:or [:contains :name "cool"] [:contains :name "exciting"]]})
-; => ({:metadata/rally-api-major 2,
-       :metadata/rally-api-minor 0,
-       :metadata/ref  #<URI http://testing.rallydev.com/hierarchicalrequirement/1234,
-       :metadata/ref-object-uuid  #uuid "7e643822-f751-455a-9821-0a5fafe46d3a",
-       :metadata/ref-object-name "This feature is really cool",
-       :metadata/type :user-story})
+```
+The API allows "defaulting" of data during data creation. If you want to default data, then you will need to provide default-data-fn. The default-data-fn is a function
+that takes 2 parameters a type and a data map. The type is the type in which the user is trying to create (:defect, :task, ...) The data map is the map of data that will be
+used to create the object.
+```clojure
+(let [default-name (fn [type data] (merge {:name "Foo"} data))]
+  (-> rest-api
+      (request/set-default-data-fn default-name)
+      (api/create! rest-api :userstory)))
+```
 
+### Updating Data
+```clojure
+(def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
+(api/update! rest-api my-user-story {:description "This is my description"})
+```
+
+#### Updating Collections
+```clojure
 ;; Add a defect to a user story
 (def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
 (def my-defect (api/create! rest-api :defect {:name "This doesn't work correctly"}))
 (api/update-collection! rest-api (:defects my-user-story) :add [my-defect])
+```
 
-;; Query for a user story's related defects
-(-> (api/query rest-api (:defects my-user-story))
-    first
-    :metadata/ref-object-name)
-; => "This doesn't work correctly"
+#### Setting Relationships
+```clojure
+;; Add a parent to a userstory
+(def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
+(def my-parent (api/create! rest-api :user-story {:name "Really cool parent"}))
+(api/update! rest-api my-user-story {:parent my-parent})
 ```
 
 ## License
