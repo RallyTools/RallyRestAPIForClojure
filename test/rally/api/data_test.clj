@@ -80,6 +80,7 @@
     (is (= "true" (data/create-fetch fetch)))))
 
 (deftest create-order-should-translate-correctly
+  (is (= "Name" (data/create-order :name)))
   (is (= "Name" (data/create-order [:name])))
   (is (= "Name,Description" (data/create-order [:name :description])))
   (is (= "Name asc" (data/create-order [[:name :asc]])))

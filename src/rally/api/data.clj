@@ -109,7 +109,8 @@
          (string/join ","))))
 
 (defn create-order [orders]
-  (let [transform (fn [[attribute direction]]
+  (let [orders    (if (keyword? orders) [orders] orders)
+        transform (fn [[attribute direction]]
                     (str (->rally-case attribute) " " (name direction)))]
     (->> orders
          (map (fn [order] (if (sequential? order) (transform order) (->rally-case order))))

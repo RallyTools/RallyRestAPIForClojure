@@ -90,7 +90,7 @@
 
 (deftest ^:integration query-should-handle-order-by-correctly
   (let [created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory)))
-        userstory-seq       (api/query *rest-api* :userstory {:order [:name]})
+        userstory-seq       (api/query *rest-api* :userstory {:order :name})
 
         userstory-names     (map :metadata/ref-object-name userstory-seq)
         sorted-names        (sort String/CASE_INSENSITIVE_ORDER userstory-names)]
