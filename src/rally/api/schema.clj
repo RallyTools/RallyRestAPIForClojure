@@ -21,10 +21,10 @@
                       [k new-v]))]
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))
 
-(defn current-schema [rest-api]
+(defn current-schema [{:keys [rally] :as rest-api}]
   (let [current-project (api/find rest-api (request/get-current-project rest-api))]
     ;; The schema endpoint ignores page information and gives you the entire result.
-    (-> (api/query rest-api [:slm :schema :v2.0 :project (str (:object-id current-project))])
+    (-> (api/query rest-api [:slm :schema (:version rally) :project (str (:object-id current-project))])
         ->cleanup-schema
         map-by-element-name)))
 

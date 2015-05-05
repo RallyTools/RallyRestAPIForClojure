@@ -4,23 +4,27 @@
   (:import [java.net URI]))
 
 (deftest to-uri-string-should-handle-all-the-cases
-  (let [rally-host "http://localhost:7001"]
-    (is (= (str rally-host "/slm/webservice/v2.0/Defect") (request/->uri-string rally-host :defect)))
-    (is (= (str rally-host "/slm/webservice/v2.0/defect/123/tasks") (request/->uri-string rally-host [(str rally-host "/slm/webservice/v2.0/defect/123") :tasks])))
-    (is (= (str rally-host "slm/schema/v2.0/workspace/123" (request/->uri-string rally-host [:slm :schema :v2.0 :workspace "123"]))))
-    (is (= (str rally-host "/slm/webservice/v2.0/defect/123") (request/->uri-string rally-host {:metadata/ref (str rally-host "/slm/webservice/v2.0/defect/123")})))
-    (is (= (str rally-host "/slm/webservice/v2.0/defect/123") (request/->uri-string rally-host (str rally-host "/slm/webservice/v2.0/defect/123"))))
-    (is (= (str rally-host "/slm/webservice/v2.0/defect/123") (request/->uri-string rally-host (URI. (str rally-host "/slm/webservice/v2.0/defect/123")))))))
+  (let [rally {:host "http://localhost:7001", :version :v2.0}]
+    (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (request/->uri-string rally :defect)))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123/tasks" (request/->uri-string rally ["http://localhost:7001/slm/webservice/v2.0/defect/123" :tasks])))
+    (is (= "http://localhost:7001/slm/schema/v2.0/workspace/123" (request/->uri-string rally [:slm :schema :v2.0 :workspace "123"])))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (request/->uri-string rally {:metadata/ref "http://localhost:7001/slm/webservice/v2.0/defect/123"})))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (request/->uri-string rally "http://localhost:7001/slm/webservice/v2.0/defect/123")))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (request/->uri-string rally (URI. "http://localhost:7001/slm/webservice/v2.0/defect/123"))))))
+
+(deftest to-uri-string-should-handle-old-versions
+  (let [rally {:host "http://localhost:7001", :version :1.43}]
+    (is (= "http://localhost:7001/slm/webservice/1.43/Defect.js" (request/->uri-string rally :defect)))))
 
 (deftest set-uri-should-create-valid-urls
-  (let [rest-api {:rally-host "http://localhost:7001"}]
+  (let [rest-api {:rally {:host "http://localhost:7001", :version :v2.0}}]
     (is (= "http://localhost:7001/slm/webservice/v2.0/HierarchicalRequirement" (request/get-url (request/set-uri rest-api :userstory))))
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/create" (request/get-url (request/set-uri rest-api :defect "create"))))
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/create/me" (request/get-url (request/set-uri rest-api :defect "create" "me"))))
     (is (= "http://localhost:7001/slm/webservice/v2.0/security/authorize" (request/get-url (request/set-uri rest-api :security :authorize))))))
 
 (deftest set-url-should-translate-objects-to-refs
-  (let [rest-api {:rally-host "http://localhost:7001"}]
+  (let [rest-api {:rally {:host "http://localhost:7001" :version :v2.0}}]
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (request/get-url (request/set-url rest-api "http://localhost:7001/slm/webservice/v2.0/Defect"))))
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (request/get-url (request/set-url rest-api {:metadata/ref "http://localhost:7001/slm/webservice/v2.0/Defect"}))))))
 

@@ -6,11 +6,19 @@
 
 (encoding/add-encoder java.net.URI encoding/encode-str)
 
-(defn ->uri-string [rally-host uri]
+(defn- requires-js-extension [version]
+  (.startsWith (name version) "1"))
+
+(defn- build-uri-for-type [host version type]
+  (let [rally-type (data/clojure-type->rally-type type)
+        rally-type (if (requires-js-extension version) (str rally-type ".js") rally-type)]
+    [host :slm :webservice version rally-type]))
+
+(defn ->uri-string [{:keys [host version]} uri]
   (cond
-    (keyword? uri)       (data/->ref [rally-host :slm :webservice :v2.0 (data/clojure-type->rally-type uri)])
+    (keyword? uri)       (data/->ref (build-uri-for-type host version uri))
     (data/uri-like? uri) (data/->ref uri)
-    (sequential? uri)    (data/->ref (cons rally-host uri))
+    (sequential? uri)    (data/->ref (cons host uri))
     :else                (data/->ref uri)))
 
 (defn set-query-param [rest-api name value]
@@ -48,8 +56,8 @@
 (defn get-url [rest-api]
   (get-in rest-api [:request :url]))
 
-(defn set-uri [{:keys [rally-host] :as rest-api} uri & additional]
-  (let [base-uri   (->uri-string rally-host uri)
+(defn set-uri [{:keys [rally] :as rest-api} uri & additional]
+  (let [base-uri   (->uri-string rally uri)
         additional (map name additional)
         url        (string/join "/" (cons base-uri additional))]
     (set-url rest-api url)))
@@ -79,3 +87,6 @@
 
 (defn debug [rest-api]
   (assoc-in rest-api [:request :debug] true))
+
+(defn set-version [rest-api version]
+  (assoc-in rest-api [:rally :version] version))

@@ -30,6 +30,12 @@
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
+(deftest ^:integration older-versions-of-webservices-can-be-used
+  (let [userstory-name (generate-string)
+        userstory      (api/create! *rest-api* :userstory {:name userstory-name})
+        read-userstory (api/find-by-formatted-id (request/set-version *rest-api* :1.43) :userstory (:formatted-id userstory))]
+    (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
+
 (deftest ^:integration find-by-formatted-id-should-handle-the-oddity-in-querying-for-artifacts
   (let [userstory (api/create! *rest-api* :userstory)
         defect    (api/create! *rest-api* :defect)

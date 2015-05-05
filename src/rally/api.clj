@@ -135,16 +135,17 @@
        (create-rest-api credentials rally-host)))
   ([{:keys [api-key] :as credentials} rally-host]
      (let [connection-manager (conn-mgr/make-reusable-conn-manager {})
-           rest-api           {:request    {:connection-manager connection-manager
-                                            :cookie-store       (cookies/cookie-store)
-                                            :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
-                                                                 "X-RallyIntegrationPlatform" (env/env "java.version")
-                                                                 "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
-                                            :debug              (or (env/env :debug-rally-rest) false)
-                                            :method             :get
-                                            :as                 :json}
-                               :rally-host rally-host
-                               :middleware client/default-middleware}
+           rest-api           {:request       {:connection-manager connection-manager
+                                               :cookie-store       (cookies/cookie-store)
+                                               :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
+                                                                    "X-RallyIntegrationPlatform" (env/env "java.version")
+                                                                    "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
+                                               :debug              (or (env/env :debug-rally-rest) false)
+                                               :method             :get
+                                               :as                 :json}
+                               :rally         {:host    rally-host
+                                               :version :v2.0}
+                               :middleware    client/default-middleware}
            rest-api           (if api-key
                                 (request/add-headers rest-api {:zsessionid api-key})
                                 (request/set-security-token rest-api (security-token rest-api credentials)))
