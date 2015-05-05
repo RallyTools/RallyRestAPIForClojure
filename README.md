@@ -10,11 +10,18 @@ or with an API key.
 
 ```clojure
 (require '[rally-api.api :as api])
+(require '[rally-api.request :as request])
 
 (def rest-api (api/create-rest-api {:username "me@mycompany.com" :password "supersecret"}))
 ; => #'user/rest-api
 
 (def rest-api (api/create-rest-api {:api-key "mysecret key"}))
+; => #'user/rest-api
+
+;; Using an older webservice version
+(def rest-api (-> {:username "me@mycompany.com" :password "supersecret"}
+                  (api/create-rest-api)
+                  (request/set-version :1.43))
 ; => #'user/rest-api
 ```
 
@@ -103,6 +110,16 @@ Query specs are modeled after [honey-sql](https://github.com/jkk/honeysql). Let'
 
 (api/query rest-api :userstory [:= :parent.name "Foo"])
 ;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/HierarchicalRequirement?query=(Parent.Name = "Foo")
+
+;; ORDER
+(api/query rest-api :userstory {:query [:= :name "Foo"] :order :state})
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/HierarchicalRequirement?query=(Name = "Foo")&order="State"
+
+(api/query rest-api :defect {:query [:contains :name "Foo"] :order [:state :name]})
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=(Name contains "Foo")&order="State,Name"
+
+(api/query rest-api :defect {:query [:contains :name "Foo"] :order [:state [:name :desc]]})
+;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect?query=(Name contains "Foo")&order="State,Name desc"
 ```
 
 Query specs can also contain information like `pagesize` or `start`.
