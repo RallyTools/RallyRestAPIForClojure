@@ -4,6 +4,8 @@ RallyRestAPIForClojure is a Clojure library to access your Rally data. It curren
 
 [![Build Status](https://travis-ci.org/RallyTools/RallyRestAPIForClojure.svg?branch=master)](https://travis-ci.org/RallyTools/RallyRestAPIForClojure)
 
+[![Clojars Project](http://clojars.org/com.rallydev/clj-rally/latest-version.svg)](http://clojars.org/com.rallydev/clj-rally)
+
 ### Creating a REST API
 The rest API is the central object of the Clojure API for Rally. An API can be created with a username/password
 or with an API key.
