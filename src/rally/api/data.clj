@@ -45,20 +45,57 @@
 (defn rally-type->clojure-type [type]
   (if (.equalsIgnoreCase type user-story-rally-type)
     :user-story
-    (csk/->kebab-case-keyword type)))
+    (let [[p1 p2] (string/split type #"\/")]
+      (if (string/blank? p2)
+        (csk/->kebab-case-keyword type)
+        (keyword (csk/->kebab-case p1) (csk/->kebab-case p2))))))
 
 (defn clojure-type->rally-type [type]
-  (case type
-    :userstory  user-story-rally-type
-    :user-story user-story-rally-type
-    :UserStory  user-story-rally-type
-    :security   "security"
-    (csk/->PascalCaseString type)))
+  (let [namespace (namespace type)
+        result    (case type
+                    :userstory  user-story-rally-type
+                    :user-story user-story-rally-type
+                    :UserStory  user-story-rally-type
+                    :security   "security"
+                    (csk/->PascalCaseString type))]
+    (if (string/blank? namespace)
+      result (str (-> namespace keyword clojure-type->rally-type) "/" result))))
+
+(defn- oid? [value]
+  (let [long-matcher #"[-+]?\d+$"]
+    (not (nil? (re-matches long-matcher value)))))
+
+(defn- uuid? [value]
+  (let [uuid-matcher #"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"]
+    (not (nil? (re-matches uuid-matcher value)))))
 
 (defn rally-ref->clojure-type [rally-ref]
-  (let [type-regex #"/slm/webservice/[^/]+/([^/]+).*"
-        [_ type]   (re-find type-regex (str rally-ref))]
-    (rally-type->clojure-type type)))
+  (let [type-part? (fn [part] (not (or (oid? part)
+                                           (uuid? part)
+                                           (= "create" part)
+                                           (.startsWith part "v2"))))
+        [p3 p2 p1]   (-> (string/split rally-ref #"\/")
+                         reverse)]
+    ; Look at the last 3 parts of the ref
+    (-> (cond
+          ; /slm/webservice/v2.0/PortfolioItem/Feature
+          (and (type-part? p2)
+               (type-part? p3))
+          (str p2 "/" p3)
+
+          ; /slm/webservice/v2.0/PortfolioItem/Feature/1234
+          (and (type-part? p1)
+               (type-part? p2))
+          (str p1 "/" p2)
+
+          ; /slm/webservice/v2.0/UserStory
+          (type-part? p3)
+          p3
+
+          ; /slm/webservice/v2.0/UserStory/1234
+          :default
+          p2)
+        rally-type->clojure-type)))
 
 (defn- not-nil? [v]
   (not (or (empty? v) (= "null" v))))

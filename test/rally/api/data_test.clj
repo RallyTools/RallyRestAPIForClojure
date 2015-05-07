@@ -47,12 +47,16 @@
   (is (= data/user-story-rally-type (data/clojure-type->rally-type :userstory)))
   (is (= data/user-story-rally-type (data/clojure-type->rally-type :UserStory)))  
   (is (= "security" (data/clojure-type->rally-type :security)))
-  (is (= "Defect" (data/clojure-type->rally-type :defect))))
+  (is (= "Defect" (data/clojure-type->rally-type :defect)))
+  (is (= "PortfolioItem/Feature" (data/clojure-type->rally-type :portfolio-item/feature))))
 
 (deftest convert-rally-ref-to-clojure-type
   (is (= :user-story (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234")))
   (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect")))
-  (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect/create"))))
+  (is (= :defect (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/Defect/create")))
+  (is (= :revision) (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/UserStory/1325/Revision/1231"))
+  (is (= :revision (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/UserStory/aa5b2cb6-2912-9e09-692a-d7865c828727/Revision/aa5b2cb6-2912-9e09-692a-d7865c828727")))
+  (is (= :portfolio-item/feature (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/PortfolioItem/Feature"))))
 
 (deftest extract-oid-from-ref
   (let [ref "https://localhost/slm/webservice/v2.0/Defect/123"]

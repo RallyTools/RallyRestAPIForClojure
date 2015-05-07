@@ -149,3 +149,9 @@
   (let [parent (api/create! *rest-api* :userstory)
         child  (api/create! *rest-api* :userstory {:parent parent})]
     (= [child] (api/query *rest-api* :userstory [:= :parent parent]))))
+
+(deftest ^:integration can-create-portfolio-items
+  (let [feature-name (generate-string)
+        feature      (api/create! *rest-api* :portfolio-item/feature {:name feature-name})
+        read-feature (api/find *rest-api* (:metadata/ref feature))]
+    (is (= (:metadata/ref-object-name read-feature) feature-name))))
