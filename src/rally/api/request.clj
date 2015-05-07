@@ -58,7 +58,7 @@
 
 (defn set-uri [{:keys [rally] :as rest-api} uri & additional]
   (let [base-uri   (->uri-string rally uri)
-        additional (map name additional)
+        additional (map data/->str additional)
         url        (string/join "/" (cons base-uri additional))]
     (set-url rest-api url)))
 

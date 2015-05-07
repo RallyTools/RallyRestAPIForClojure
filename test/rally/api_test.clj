@@ -24,16 +24,10 @@
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})]
     (is (= (:metadata/ref-object-name userstory) userstory-name))))
 
-(deftest ^:integration userstory-can-be-queried-by-formatted-id
+(deftest ^:integration objects-can-be-queried-by-formatted-id
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
-    (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
-
-(deftest ^:integration older-versions-of-webservices-can-be-used
-  (let [userstory-name (generate-string)
-        userstory      (api/create! *rest-api* :userstory {:name userstory-name})
-        read-userstory (api/find-by-formatted-id (request/set-version *rest-api* :1.43) :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration find-by-formatted-id-should-handle-the-oddity-in-querying-for-artifacts
@@ -41,6 +35,24 @@
         defect    (api/create! *rest-api* :defect)
         artifact  (api/find-by-formatted-id *rest-api* :artifact (:formatted-id defect))]
     (is (= (:metadata/ref-object-name artifact) (:metadata/ref-object-name defect)))))
+
+(deftest ^:integration older-versions-of-webservices-can-be-used
+  (let [userstory-name (generate-string)
+        userstory      (api/create! *rest-api* :userstory {:name userstory-name})
+        read-userstory (api/find-by-formatted-id (request/set-version *rest-api* :1.43) :userstory (:formatted-id userstory))]
+    (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
+
+(deftest ^:integration objects-can-be-queried-by-id
+  (let [userstory-name (generate-string)
+        userstory      (api/create! *rest-api* :userstory {:name userstory-name})
+        read-userstory (api/find-by-id *rest-api* :userstory (:object-id userstory))]
+    (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
+
+(deftest ^:integration objects-can-be-queried-by-uuid
+  (let [userstory-name (generate-string)
+        userstory      (api/create! *rest-api* :userstory {:name userstory-name})
+        read-userstory (api/find-by-id *rest-api* :userstory (:metadata/ref-object-uuid userstory))]
+    (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration userstory-can-be-updated
   (let [userstory-name (generate-string)

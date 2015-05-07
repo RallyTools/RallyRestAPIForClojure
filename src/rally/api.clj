@@ -103,6 +103,11 @@
     (->> (query rest-api rally-type query-spec)
          (some #(when (= formatted-id (:formatted-id %)) %)))))
 
+(defn find-by-id [rest-api type id]
+  (-> rest-api
+      (request/set-uri type id)
+      do-request))
+
 (defn current-workspace [rest-api]
   (let [current-project (find rest-api (request/get-current-project rest-api))]
     (find rest-api (:workspace current-project))))

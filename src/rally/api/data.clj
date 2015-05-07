@@ -114,17 +114,19 @@
               [new-k new-v]))]
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))
 
-(defn ->ref [ref-or-object]
-  (let [to-str (fn [v] (if (keyword? v) (name v) (str v)))]
-    (cond
-      (sequential? ref-or-object)
-      (->> ref-or-object
-           (map ->ref)
-           (map to-str)
-           (string/join "/"))
+(defn ->str [v]
+  (if (keyword? v) (name v) (str v)))
 
-      :default
-      (to-str (or (:metadata/ref ref-or-object) ref-or-object)))))
+(defn ->ref [ref-or-object]
+  (cond
+    (sequential? ref-or-object)
+    (->> ref-or-object
+         (map ->ref)
+         (map ->str)
+         (string/join "/"))
+
+    :default
+    (->str (or (:metadata/ref ref-or-object) ref-or-object))))
 
 (defn uri-like? [thing]
   (-> (->ref thing)

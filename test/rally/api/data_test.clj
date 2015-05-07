@@ -149,6 +149,13 @@
     (is (= tasks-ref (data/->ref [(URI. ref-str) :tasks])))
     (is (= tasks-ref (data/->ref [(URI. ref-str) "tasks"])))))
 
+(deftest convert-to-str
+  (is (= "" (data/->str nil)))
+  (is (= "100" (data/->str 100)))
+  (is (= "name" (data/->str :name)))
+  (is (= "name" (data/->str "name")))
+  (is (= "http://localhost:7001/slm/webservice/v2.0/defect" (data/->str (URI. "http://localhost:7001/slm/webservice/v2.0/defect")))))
+
 (deftest t-uri-like?
   (is (true? (data/uri-like? "http://localhost:7001/slm/webservice/v2.0/defect")))
   (is (false? (data/metadata-name? :name)))
