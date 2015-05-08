@@ -58,12 +58,6 @@
   (is (= :revision (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/UserStory/aa5b2cb6-2912-9e09-692a-d7865c828727/Revision/aa5b2cb6-2912-9e09-692a-d7865c828727")))
   (is (= :portfolio-item/feature (data/rally-ref->clojure-type "https://localhost/slm/webservice/v2.0/PortfolioItem/Feature"))))
 
-(deftest extract-oid-from-ref
-  (let [ref "https://localhost/slm/webservice/v2.0/Defect/123"]
-    (is (= 123 (data/->oid ref)))
-    (is (= 123 (data/->oid {:metadata/ref ref})))
-    (is (= 123 (data/->oid (URI. ref))))))
-
 (deftest convert-to-clojure-map
   (let [uuid (UUID/randomUUID)]
     (is (= {:query-result {:metadata/type :user :total-result-count 1}} (data/->clojure-map {:QueryResult {:_type "User" :TotalResultCount 1}})))

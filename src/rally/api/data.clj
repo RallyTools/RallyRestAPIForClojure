@@ -133,14 +133,6 @@
       str
       (.startsWith "http")))
 
-(defn ->oid [value]
-  (-> value
-      ->ref
-      str
-      (string/split #"\/")
-      last
-      (Long.)))
-
 (defn create-fetch [fetch]
   (if (true? fetch)
     "true"
