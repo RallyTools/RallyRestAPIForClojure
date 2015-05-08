@@ -4,6 +4,7 @@
             [crypto.random :as random]
             [environ.core :as env]
             [rally.api :as api]
+            [rally.api.data :as data]
             [rally.api.request :as request]))
 
 (def ^:dynamic *rest-api*)
@@ -19,7 +20,7 @@
 
 (use-fixtures :each api-fixture)
 
-(deftest ^:integration userstory-can-be-created
+(deftest ^:integration objects-can-be-created
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})]
     (is (= (:metadata/ref-object-name userstory) userstory-name))))
@@ -54,27 +55,27 @@
         read-userstory (api/find-by-id *rest-api* :userstory (:metadata/ref-object-uuid userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
-(deftest ^:integration userstory-can-be-updated
+(deftest ^:integration objects-can-be-updated
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory)
         _              (api/update! *rest-api* userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
-(deftest ^:integration userstory-can-be-updated-without-existing-object
+(deftest ^:integration objects-can-be-updated-using-just-ref
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory)
         _              (api/update! *rest-api* (:metadata/ref userstory) {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
-(deftest ^:integration can-get-userstory-by-ref
+(deftest ^:integration objects-can-be-found-by-ref
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find *rest-api* (:metadata/ref userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
-(deftest ^:integration can-delete-userstory
+(deftest ^:integration objects-can-be-deleted
   (let [userstory      (api/create! *rest-api* :userstory)
         _              (api/delete! *rest-api* userstory)
         read-userstory (api/find *rest-api* (:metadata/ref userstory))]
@@ -131,15 +132,40 @@
         defects         (api/query *rest-api* (:defects userstory))]
     (is (= [(:metadata/ref-object-name (second created-defects))] (map :metadata/ref-object-name defects)))))
 
-(deftest ^:integration parent-can-be-set-on-userstory
+(deftest ^:integration relationship-can-be-created-using-object
   (let [parent (api/create! *rest-api* :userstory)
         child  (api/create! *rest-api* :userstory {:parent parent})]
     (is (= (:metadata/ref parent) (:metadata/ref (:parent child))))))
 
-(deftest ^:integration parent-can-be-updated-on-userstory
+(deftest ^:integration relationship-can-be-created-using-ref
+  (let [parent     (api/create! *rest-api* :userstory)
+        parent-ref (data/->ref parent)
+        child      (api/create! *rest-api* :userstory {:parent parent-ref})]
+    (is (= parent-ref (data/->ref (:parent child))))))
+
+(deftest ^:integration relationship-can-be-created-using-uuid-ref
+  (let [parent     (api/create! *rest-api* :userstory)
+        parent-ref (data/->uri-string (:rally *rest-api*) :userstory (:metadata/ref-object-uuid parent))
+        child      (api/create! *rest-api* :userstory {:parent parent-ref})]
+    (is (= (:metadata/ref parent) (:metadata/ref (:parent child))))))
+
+(deftest ^:integration relationship-can-be-updated-using-object
   (let [parent        (api/create! *rest-api* :userstory)
         child         (api/create! *rest-api* :userstory)
         updated-child (api/update! *rest-api* child {:parent parent})]
+    (is (= (:metadata/ref parent) (:metadata/ref (:parent updated-child))))))
+
+(deftest ^:integration relationship-can-be-updated-using-ref
+  (let [parent        (api/create! *rest-api* :userstory)
+        child         (api/create! *rest-api* :userstory)
+        updated-child (api/update! *rest-api* (:metadata/ref child) {:parent parent})]
+    (is (= (:metadata/ref parent) (:metadata/ref (:parent updated-child))))))
+
+(deftest ^:integration relationship-can-be-updated-using-uuid-ref
+  (let [parent        (api/create! *rest-api* :userstory)
+        child         (api/create! *rest-api* :userstory)
+        child-ref     (data/->uri-string (:rally *rest-api*) :userstory (:metadata/ref-object-uuid child))
+        updated-child (api/update! *rest-api* child-ref {:parent parent})]
     (is (= (:metadata/ref parent) (:metadata/ref (:parent updated-child))))))
 
 (deftest ^:integration vector-is-converted-to-query-spec
