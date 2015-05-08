@@ -6,12 +6,10 @@
 
 (encoding/add-encoder java.net.URI encoding/encode-str)
 
-(defn- requires-js-extension [version]
-  (.startsWith (name version) "1"))
-
 (defn- build-uri-for-type [host version type]
-  (let [rally-type (data/clojure-type->rally-type type)
-        rally-type (if (requires-js-extension version) (str rally-type ".js") rally-type)]
+  (let [requires-js (fn [version] (.startsWith (name version) "1"))
+        rally-type  (data/clojure-type->rally-type type)
+        rally-type  (if (requires-js version) (str rally-type ".js") rally-type)]
     [host :slm :webservice version rally-type]))
 
 (defn ->uri-string [{:keys [host version]} uri & additional]

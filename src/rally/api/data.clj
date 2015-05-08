@@ -71,37 +71,35 @@
 
 (defn rally-ref->clojure-type [rally-ref]
   (let [type-part? (fn [part] (not (or (oid? part)
-                                           (uuid? part)
-                                           (= "create" part)
-                                           (.startsWith part "v2"))))
+                                       (uuid? part)
+                                       (= "create" part)
+                                       (.startsWith part "v2"))))
         [p3 p2 p1]   (-> (string/split rally-ref #"\/")
                          reverse)]
     ; Look at the last 3 parts of the ref
     (-> (cond
-          ; /slm/webservice/v2.0/PortfolioItem/Feature
-          (and (type-part? p2)
-               (type-part? p3))
-          (str p2 "/" p3)
+         ; /slm/webservice/v2.0/PortfolioItem/Feature
+         (and (type-part? p2)
+              (type-part? p3))
+         (str p2 "/" p3)
 
-          ; /slm/webservice/v2.0/PortfolioItem/Feature/1234
-          (and (type-part? p1)
-               (type-part? p2))
-          (str p1 "/" p2)
+         ; /slm/webservice/v2.0/PortfolioItem/Feature/1234
+         (and (type-part? p1)
+              (type-part? p2))
+         (str p1 "/" p2)
 
-          ; /slm/webservice/v2.0/UserStory
-          (type-part? p3)
-          p3
+         ; /slm/webservice/v2.0/UserStory
+         (type-part? p3)
+         p3
 
-          ; /slm/webservice/v2.0/UserStory/1234
-          :default
-          p2)
+         ; /slm/webservice/v2.0/UserStory/1234
+         :default
+         p2)
         rally-type->clojure-type)))
 
-(defn- not-nil? [v]
-  (not (or (empty? v) (= "null" v))))
-
 (defn ->clojure-map [m]
-  (letfn [(transform [[k v]]
+  (letfn [(not-nil? [v] (not (or (empty? v) (= "null" v))))
+          (transform [[k v]]
             (let [new-k (->clojure-case k)
                   new-v (case new-k
                           :metadata/type            (rally-type->clojure-type v)
