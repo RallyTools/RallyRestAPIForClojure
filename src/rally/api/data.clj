@@ -148,12 +148,11 @@
          (string/join ","))))
 
 (declare create-query)
-(def ^:private logic-expression? #{:or :and})
 
 (defn- translate-value [value]
   (cond
-    (string? value) (if (.startsWith value "http") value (str "\"" value "\""))
-    :else           (->ref value)))
+   (string? value) (if (.startsWith value "http") value (str "\"" value "\""))
+   :else           (->ref value)))
 
 (defn- create-expression [[operator left right]]
   (let [lhs (->> (string/split (name left) #"\.")
@@ -174,7 +173,8 @@
        (group-expressions logic-expr)))
 
 (defn create-query [query]
-  (when-let [[expr & rest] query]
-    (if (logic-expression? expr)
-      (create-expressions expr rest)
-      (create-expression query))))
+  (let [logic-expression? #{:or :and}]
+    (when-let [[expr & rest] query]
+      (if (logic-expression? expr)
+        (create-expressions expr rest)
+        (create-expression query)))))
