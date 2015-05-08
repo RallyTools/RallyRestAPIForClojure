@@ -143,6 +143,19 @@
     (is (= tasks-ref (data/->ref [(URI. ref-str) :tasks])))
     (is (= tasks-ref (data/->ref [(URI. ref-str) "tasks"])))))
 
+(deftest to-uri-string-should-handle-all-the-cases
+  (let [rally {:host "http://localhost:7001", :version :v2.0}]
+    (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (data/->uri-string rally :defect)))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123/tasks" (data/->uri-string rally ["http://localhost:7001/slm/webservice/v2.0/defect/123" :tasks])))
+    (is (= "http://localhost:7001/slm/schema/v2.0/workspace/123" (data/->uri-string rally [:slm :schema :v2.0 :workspace "123"])))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (data/->uri-string rally {:metadata/ref "http://localhost:7001/slm/webservice/v2.0/defect/123"})))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (data/->uri-string rally "http://localhost:7001/slm/webservice/v2.0/defect/123")))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (data/->uri-string rally (URI. "http://localhost:7001/slm/webservice/v2.0/defect/123"))))))
+
+(deftest to-uri-string-should-handle-old-versions
+  (let [rally {:host "http://localhost:7001", :version :1.43}]
+    (is (= "http://localhost:7001/slm/webservice/1.43/Defect.js" (data/->uri-string rally :defect)))))
+
 (deftest convert-to-str
   (is (= "" (data/->str nil)))
   (is (= "100" (data/->str 100)))

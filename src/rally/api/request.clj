@@ -6,21 +6,6 @@
 
 (encoding/add-encoder java.net.URI encoding/encode-str)
 
-(defn- build-uri-for-type [host version type]
-  (let [requires-js (fn [version] (.startsWith (name version) "1"))
-        rally-type  (data/clojure-type->rally-type type)
-        rally-type  (if (requires-js version) (str rally-type ".js") rally-type)]
-    [host :slm :webservice version rally-type]))
-
-(defn ->uri-string [{:keys [host version]} uri & additional]
-  (let [base-uri   (cond
-                     (keyword? uri)       (data/->ref (build-uri-for-type host version uri))
-                     (data/uri-like? uri) (data/->ref uri)
-                     (sequential? uri)    (data/->ref (cons host uri))
-                     :else                (data/->ref uri))
-        additional (map data/->str additional)]
-    (string/join "/" (cons base-uri additional))))
-
 (defn set-query-param [rest-api name value]
   (assoc-in rest-api [:request :query-params name] value))
 
@@ -57,7 +42,7 @@
   (get-in rest-api [:request :url]))
 
 (defn set-uri [{:keys [rally] :as rest-api} uri & additional]
-  (let [url (apply ->uri-string rally uri additional)]
+  (let [url (apply data/->uri-string rally uri additional)]
     (set-url rest-api url)))
 
 (defn add-headers [rest-api headers]

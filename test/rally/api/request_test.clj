@@ -3,19 +3,6 @@
             [clojure.test :refer :all])
   (:import [java.net URI]))
 
-(deftest to-uri-string-should-handle-all-the-cases
-  (let [rally {:host "http://localhost:7001", :version :v2.0}]
-    (is (= "http://localhost:7001/slm/webservice/v2.0/Defect" (request/->uri-string rally :defect)))
-    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123/tasks" (request/->uri-string rally ["http://localhost:7001/slm/webservice/v2.0/defect/123" :tasks])))
-    (is (= "http://localhost:7001/slm/schema/v2.0/workspace/123" (request/->uri-string rally [:slm :schema :v2.0 :workspace "123"])))
-    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (request/->uri-string rally {:metadata/ref "http://localhost:7001/slm/webservice/v2.0/defect/123"})))
-    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (request/->uri-string rally "http://localhost:7001/slm/webservice/v2.0/defect/123")))
-    (is (= "http://localhost:7001/slm/webservice/v2.0/defect/123" (request/->uri-string rally (URI. "http://localhost:7001/slm/webservice/v2.0/defect/123"))))))
-
-(deftest to-uri-string-should-handle-old-versions
-  (let [rally {:host "http://localhost:7001", :version :1.43}]
-    (is (= "http://localhost:7001/slm/webservice/1.43/Defect.js" (request/->uri-string rally :defect)))))
-
 (deftest set-uri-should-create-valid-urls
   (let [rest-api {:rally {:host "http://localhost:7001", :version :v2.0}}]
     (is (= "http://localhost:7001/slm/webservice/v2.0/HierarchicalRequirement" (request/get-url (request/set-uri rest-api :userstory))))
