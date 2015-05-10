@@ -117,6 +117,14 @@
         defects         (api/query *rest-api* (:defects userstory))]
     (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects))))))
 
+(deftest ^:integration relationships-can-be-queried-with-uuid
+  (let [created-defects [(api/create! *rest-api* :defect) (api/create! *rest-api* :defect)]
+        userstory       (api/create! *rest-api* :userstory)
+        _               (api/update-collection! *rest-api* (:defects userstory) :add created-defects)
+        defects-ref     (data/->uri-string (:rally *rest-api*) :userstory (:metadata/ref-object-uuid userstory) :defects)
+        defects         (api/query *rest-api* defects-ref)]
+    (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects))))))
+
 (deftest ^:integration nested-relationships-can-be-queried
   (let [parent-name (generate-string)
         parent      (api/create! *rest-api* :userstory {:name parent-name})
