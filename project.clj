@@ -1,4 +1,4 @@
-(defproject com.rallydev/clj-rally "0.6.0"
+(defproject com.rallydev/clj-rally "0.6.1"
   :description "A clojure library for interating with Rally's webservice API."
   :url "https://github.com/RallyTools/RallyRestAPIForClojure"
   :license {:name "MIT License"
