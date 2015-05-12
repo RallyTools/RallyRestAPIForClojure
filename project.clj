@@ -16,5 +16,5 @@
   :plugins [[lein-pprint "1.1.1"]]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[criterium "0.4.3"]
-                                  [org.clojure/clojure "1.6.0"]
+                                  [org.clojure/clojure "1.7.0-beta2"]
                                   [crypto-random "1.2.0"]]}})

@@ -4,8 +4,10 @@
             [rally.api.data :as data]
             [rally.api.request :as request]))
 
-(defn- required-attribute? [{:keys [read-only required]}]
-  (and (not read-only) required))
+(defn- required-attribute? [{:keys [read-only required constrained]}]
+  (and (not read-only)
+       required
+       (not constrained)))
 
 (defn- map-by-element-name [s]
   (->> s
