@@ -25,6 +25,15 @@
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})]
     (is (= (:metadata/ref-object-name userstory) userstory-name))))
 
+(deftest ^:integration objects-can-be-created-with-current-user
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory-name (generate-string)
+        userstory      (api/create! :userstory {:name userstory-name})]
+      (is (= (:metadata/ref-object-name userstory) userstory-name)))))
+
+(deftest ^:integration an-error-occurs-when-trying-to-create-object-without-binding-current-user
+  (is (thrown? AssertionError (api/create! :userstory {:name (generate-string)}))))
+
 (deftest ^:integration objects-can-be-queried-by-formatted-id
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
@@ -49,6 +58,13 @@
         read-userstory (api/find-by-id *rest-api* :userstory (:object-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
+(deftest ^:integration objects-can-be-queried-by-id-with-current-user
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory-name (generate-string)
+          userstory      (api/create! :userstory {:name userstory-name})
+          read-userstory (api/find-by-id :userstory (:object-id userstory))]
+      (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
+
 (deftest ^:integration objects-can-be-queried-by-uuid
   (let [userstory-name (generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
@@ -61,6 +77,17 @@
         _              (api/update! *rest-api* userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
+
+(deftest ^:integration objects-can-be-updated-with-current-user
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory-name (generate-string)
+          userstory      (api/create! :userstory)
+          _              (api/update! userstory {:name userstory-name})
+          read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
+      (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
+
+(deftest ^:integration an-error-occurs-when-trying-to-update-object-without-binding-current-user
+  (is (thrown? AssertionError (api/update! :userstory {:name (generate-string)}))))
 
 (deftest ^:integration objects-can-be-updated-using-just-ref
   (let [userstory-name (generate-string)
@@ -75,11 +102,25 @@
         read-userstory (api/find *rest-api* (:metadata/ref userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
+(deftest ^:integration objects-can-be-found-by-ref-with-current-user
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory-name (generate-string)
+          userstory      (api/create! :userstory {:name userstory-name})
+          read-userstory (api/find (:metadata/ref userstory))]
+      (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
+
 (deftest ^:integration objects-can-be-deleted
   (let [userstory      (api/create! *rest-api* :userstory)
         _              (api/delete! *rest-api* userstory)
         read-userstory (api/find *rest-api* (:metadata/ref userstory))]
     (is (nil? read-userstory))))
+
+(deftest ^:integration objects-can-be-deleted-with-current-user
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory      (api/create! :userstory)
+          _              (api/delete! userstory)
+          read-userstory (api/find (:metadata/ref userstory))]
+      (is (nil? read-userstory)))))
 
 (deftest ^:integration query-seq-should-cross-pages
   (let [prefix              (generate-string)
@@ -116,6 +157,14 @@
         _               (api/update-collection! *rest-api* (:defects userstory) :add created-defects)
         defects         (api/query *rest-api* (:defects userstory))]
     (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects))))))
+
+(deftest ^:integration query-should-be-able-to-use-current-user
+  (binding [api/*current-user* *rest-api*]
+    (let [created-defects [(api/create! :defect) (api/create! :defect)]
+          userstory       (api/create! :userstory)
+          _               (api/update-collection! (:defects userstory) :add created-defects)
+          defects         (api/query (:defects userstory))]
+      (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects)))))))
 
 (deftest ^:integration relationships-can-be-queried-with-uuid
   (let [created-defects [(api/create! *rest-api* :defect) (api/create! *rest-api* :defect)]

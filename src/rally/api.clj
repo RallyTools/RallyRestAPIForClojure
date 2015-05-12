@@ -8,8 +8,13 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:refer-clojure :exclude [find]))
 
+(def ^:dynamic *current-user*)
+
 (defn- not-found? [error]
   (= error "Cannot find object to read"))
+
+(defn- valid-rest-api? [rest-api]
+  (not (nil? (get-in rest-api [:request :cookie-store]))))
 
 (defn- check-for-rally-errors [response]
   (let [errors (:errors response)]
@@ -28,8 +33,15 @@
         check-for-rally-errors)))
 
 (defn create!
-  ([rest-api type] (create! rest-api type {}))
+  ([type] (create! *current-user* type {}))
+  
+  ([api-or-type type-or-data]
+   (if (keyword? api-or-type)
+     (create! *current-user* api-or-type type-or-data)
+     (create! api-or-type type-or-data {})))
+  
   ([rest-api type data]
+   {:pre [(valid-rest-api? rest-api)]}
    (let [default-data-fn (request/get-default-data-fn rest-api)]
      (-> rest-api
          (request/set-method :put)
@@ -38,30 +50,45 @@
          do-request
          :object))))
 
-(defn update! [rest-api ref-or-object updated-data]
-  (let [ref  (data/->ref ref-or-object)
-        type (or (:metadata/type ref-or-object) (data/rally-ref->clojure-type ref))]
-    (-> rest-api
-        (request/set-method :post)
-        (request/set-url ref)
-        (request/set-body-as-map type updated-data)
-        do-request
-        :object)))
+(defn update!
+  ([ref-or-object updated-data]
+   (update! *current-user* ref-or-object updated-data))
+  
+  ([rest-api ref-or-object updated-data]
+   {:pre [(valid-rest-api? rest-api)]}
+   (let [ref  (data/->ref ref-or-object)
+         type (or (:metadata/type ref-or-object) (data/rally-ref->clojure-type ref))]
+     (-> rest-api
+         (request/set-method :post)
+         (request/set-url ref)
+         (request/set-body-as-map type updated-data)
+         do-request
+         :object))))
 
-(defn update-collection! [rest-api collection-ref-or-object action items]
-  (let [ref (str (data/->ref collection-ref-or-object) "/" (name action))
-        items (map #(hash-map :metadata/ref (data/->ref %)) items)]
-    (-> rest-api
-        (request/set-method :post)
-        (request/set-url ref)
-        (request/set-body-as-map :collection-items items)
-        do-request)))
+(defn update-collection!
+  ([collection-ref-or-object action items]
+   (update-collection! *current-user* collection-ref-or-object action items))
+  
+  ([rest-api collection-ref-or-object action items]
+   {:pre [(valid-rest-api? rest-api)]}
+   (let [ref (str (data/->ref collection-ref-or-object) "/" (name action))
+         items (map #(hash-map :metadata/ref (data/->ref %)) items)]
+     (-> rest-api
+         (request/set-method :post)
+         (request/set-url ref)
+         (request/set-body-as-map :collection-items items)
+         do-request))))
 
-(defn delete! [rest-api ref-or-object]
-  (-> rest-api
-      (request/set-method :delete)
-      (request/set-url ref-or-object)
-      do-request))
+(defn delete!
+  ([ref-or-object]
+   (delete! *current-user* ref-or-object))
+  
+  ([rest-api ref-or-object]
+   {:pre [(valid-rest-api? rest-api)]}
+   (-> rest-api
+       (request/set-method :delete)
+       (request/set-url ref-or-object)
+       do-request)))
 
 (defn- query-for-page [rest-api uri start pagesize query-spec]
   (-> rest-api
@@ -72,53 +99,89 @@
       do-request))
 
 (defn query
-  ([rest-api uri]
-     (query rest-api uri {}))
+  ([uri]
+   (query *current-user* uri {}))
+  
+  ([api-or-uri uri-or-spec]
+   (if (valid-rest-api? api-or-uri)
+     (query api-or-uri uri-or-spec {})
+     (query *current-user* api-or-uri uri-or-spec)))
+  
   ([rest-api uri query-spec]
+   {:pre [(valid-rest-api? rest-api)]}
    (let [query-spec         (if (vector? query-spec) {:query query-spec} query-spec)
          start              (or (:start query-spec) 1)
          pagesize           (or (:pagesize query-spec) 200)
          next-start         (+ start pagesize)
          page               (query-for-page rest-api uri start pagesize query-spec)
          total-result-count (:total-result-count page)]
-       (concat (:results page)
-               (when (<= next-start total-result-count)
-                 (lazy-seq (query rest-api uri (assoc query-spec :start next-start))))))))
+     (concat (:results page)
+             (when (<= next-start total-result-count)
+               (lazy-seq (query rest-api uri (assoc query-spec :start next-start))))))))
 
 (defn find
-  ([rest-api ref-or-object]
-     (-> rest-api
-         (request/set-url ref-or-object)
-         do-request))
+  ([ref-or-object]
+   (find *current-user* ref-or-object))
+  
+  ([api-ref-or-object ref-or-object-or-query-spec]
+   (if (valid-rest-api? api-ref-or-object)
+     (-> api-ref-or-object
+         (request/set-url ref-or-object-or-query-spec)
+         do-request)
+     (find *current-user* api-ref-or-object ref-or-object-or-query-spec)))
+  
   ([rest-api uri query-spec]
-     (-> (query rest-api uri query-spec)
-      first)))
+   {:pre [(valid-rest-api? rest-api)]}
+   (-> (query rest-api uri query-spec)
+       first)))
 
-(defn find-by-formatted-id [rest-api rally-type formatted-id]
-  (let [query-spec {:query [:= :formatted-id formatted-id]
-                    :fetch true}]
-    ;; We use a query and then search because if you look for formatted-id
-    ;; in the artifact endpoint it will return all artifacts with the number
-    ;; part of the formatted it. So searching for US11 will also return DE11,T11, and so on.
-    (->> (query rest-api rally-type query-spec)
-         (some #(when (= formatted-id (:formatted-id %)) %)))))
+(defn find-by-formatted-id
+  ([rally-type formatted-id]
+   (find-by-formatted-id *current-user* rally-type formatted-id))
+  
+  ([rest-api rally-type formatted-id]
+   {:pre [(valid-rest-api? rest-api)]}
+   (let [query-spec {:query [:= :formatted-id formatted-id]
+                     :fetch true}]
+     ;; We use a query and then search because if you look for formatted-id
+     ;; in the artifact endpoint it will return all artifacts with the number
+     ;; part of the formatted it. So searching for US11 will also return DE11,T11, and so on.
+     (->> (query rest-api rally-type query-spec)
+          (some #(when (= formatted-id (:formatted-id %)) %))))))
 
-(defn find-by-id [rest-api type id]
-  (-> rest-api
-      (request/set-uri type id)
-      do-request))
+(defn find-by-id
+  ([type id]
+   (find-by-id *current-user* type id))
+  
+  ([rest-api type id]
+   {:pre [(valid-rest-api? rest-api)]}
+   (-> rest-api
+       (request/set-uri type id)
+       do-request)))
 
-(defn current-workspace [rest-api]
-  (let [current-project (find rest-api (request/get-current-project rest-api))]
-    (find rest-api (:workspace current-project))))
+(defn current-workspace
+  ([] (current-workspace *current-user*))
+  
+  ([rest-api]
+   {:pre [(valid-rest-api? rest-api)]}
+   (let [current-project (find rest-api (request/get-current-project rest-api))]
+     (find rest-api (:workspace current-project)))))
 
-(defn current-project [rest-api]
-  (find rest-api :project {:fetch true}))
+(defn current-project
+  ([] (current-project *current-user*))
+  
+  ([rest-api]
+   {:pre [(valid-rest-api? rest-api)]}
+   (find rest-api :project {:fetch true})))
 
-(defn current-user [rest-api]
-  (-> rest-api
-      (request/set-uri (keyword "user:current"))
-      do-request))
+(defn current-user
+  ([] (current-user *current-user*))
+  
+  ([rest-api]
+   {:pre [(valid-rest-api? rest-api)]}
+   (-> rest-api
+       (request/set-uri (keyword "user:current"))
+       do-request)))
 
 (defn- security-token [rest-api {:keys [username password]}]
   (-> rest-api

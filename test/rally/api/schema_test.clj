@@ -16,3 +16,7 @@
 (deftest ^:integration required-attributes
   (is (= [:name] (schema/required-attribute-names *rest-api* :defect))))
 
+(deftest ^:integration required-attributes-with-current-user
+  (binding [api/*current-user* *rest-api*]
+    (is (= [:name] (schema/required-attribute-names :defect)))))
+
