@@ -73,3 +73,9 @@
 
 (defn set-version [rest-api version]
   (assoc-in rest-api [:rally :version] version))
+
+(defn set-application-vendor [rest-api vendor]
+  (add-headers rest-api {"X-RallyIntegrationVendor" vendor}))
+
+(defn set-application-version [rest-api version]
+  (add-headers rest-api {"X-RallyIntegrationVersion" version}))

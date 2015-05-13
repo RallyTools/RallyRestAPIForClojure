@@ -27,3 +27,16 @@
     (is (= "Name desc" (request/get-query-param (request/merge-query-params rest-api {:order [[:name :desc]]}) :order)))
     (is (= 20 (request/get-query-param (request/merge-query-params rest-api {}) :pagesize)))))
 
+(deftest set-application-vendor-should-add-header
+  (let [rest-api {:request {:headers {"Header-1" "value 1"}}}
+        new-headers (get-in (request/set-application-vendor rest-api "my vendor name") [:request :headers])]
+    (is (= 2 (count new-headers)))
+    (is (contains? new-headers "X-RallyIntegrationVendor"))
+    (is (= "my vendor name" (get new-headers "X-RallyIntegrationVendor")))))
+
+(deftest set-application-version-should-add-header
+  (let [rest-api {:request {:headers {"Header-1" "value 1"}}}
+        new-headers (get-in (request/set-application-version rest-api "1.23") [:request :headers])]
+    (is (= 2 (count new-headers)))
+    (is (contains? new-headers "X-RallyIntegrationVersion"))
+    (is (= "1.23" (get new-headers "X-RallyIntegrationVersion")))))
