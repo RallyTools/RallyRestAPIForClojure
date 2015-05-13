@@ -250,3 +250,9 @@
         feature      (api/create! *rest-api* :portfolio-item/feature {:name feature-name})
         read-feature (api/find *rest-api* (:metadata/ref feature))]
     (is (= (:metadata/ref-object-name read-feature) feature-name))))
+
+(deftest ^:integration dates-are-sent-to-and-from-server-correctly
+  (let [date     (java.util.Date.)
+        testcase (api/create! *rest-api* :test-case {:name (generate-string)})
+        tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
+    (is (= (class (:date tcr)) java.util.Date))))

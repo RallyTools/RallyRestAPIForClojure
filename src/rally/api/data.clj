@@ -97,10 +97,15 @@
          p2)
         rally-type->clojure-type)))
 
+(def ^:const date-format "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+(defn- date? [key]
+  (.contains (.toLowerCase (name key)) "date"))
+
 (defn ->clojure-map [m]
   (letfn [(not-nil? [v] (not (or (empty? v) (= "null" v))))
           (transform [[k v]]
-            (let [new-k (->clojure-case k)
+            (let [new-k  (->clojure-case k)
+                  parser (java.text.SimpleDateFormat. date-format)
                   new-v (case new-k
                           :metadata/type            (rally-type->clojure-type v)
                           :metadata/ref-object-uuid (when (not-nil? v) (UUID/fromString v))
@@ -108,7 +113,10 @@
                           :metadata/ref             (when (not-nil? v) (URI/create v))
                           :metadata/rally-api-major (Integer/parseInt v)
                           :metadata/rally-api-minor (Integer/parseInt v)
-                          v)]
+                          v)
+                  new-v (if (and (date? new-k) (not (nil? new-v)))
+                          (.parse parser new-v)
+                          new-v)]
               [new-k new-v]))]
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))
 
