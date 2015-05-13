@@ -11,8 +11,8 @@ The rest API is the central object of the Clojure API for Rally. An API can be c
 or with an API key.
 
 ```clojure
-(require '[rally-api.api :as api])
-(require '[rally-api.request :as request])
+(require '[rally.api :as api])
+(require '[rally.api.request :as request])
 
 (def rest-api (api/create-rest-api {:username "me@mycompany.com" :password "supersecret"}))
 ; => #'user/rest-api
