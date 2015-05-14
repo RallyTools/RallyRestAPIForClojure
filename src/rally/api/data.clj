@@ -161,9 +161,13 @@
          (string/join ","))))
 
 (defn create-order [orders]
-  (let [orders    (if (keyword? orders) [orders] orders)
-        transform (fn [[attribute direction]]
-                    (str (->rally-case attribute) " " (name direction)))]
+  (let [direction? #{:asc :desc}
+        ;; :name => [:name]
+        orders     (if (keyword? orders) [orders] orders)
+        ;; [:name :desc] => [[:name :desc]]
+        orders     (if (direction? (second orders)) [orders] orders)
+        transform  (fn [[attribute direction]]
+                     (str (->rally-case attribute) " " (name direction)))]
     (->> orders
          (map (fn [order] (if (sequential? order) (transform order) (->rally-case order))))
          (string/join ","))))

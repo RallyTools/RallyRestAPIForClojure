@@ -80,10 +80,13 @@
 (deftest create-order-should-translate-correctly
   (is (= "Name" (data/create-order :name)))
   (is (= "Name" (data/create-order [:name])))
+  (is (= "Name desc" (data/create-order [:name :desc])))
+  (is (= "Name asc" (data/create-order [:name :asc])))
   (is (= "Name,Description" (data/create-order [:name :description])))
   (is (= "Name asc" (data/create-order [[:name :asc]])))
   (is (= "Description,Name asc" (data/create-order [:description [:name :asc]])))
-  (is (= "Name desc,ObjectID" (data/create-order [[:name :desc] :object-id]))))
+  (is (= "Name desc,ObjectID" (data/create-order [[:name :desc] :object-id])))
+  (is (= "Name desc,ObjectID asc" (data/create-order [[:name :desc] [:object-id :asc]]))))
 
 (deftest create-query-should-translate-names
   (let [query [:= :formatted-id "S80221"]]
@@ -112,9 +115,9 @@
                              [:contains :name "foo"]])))
   (is (= "(((Name = \"Junk\") AND (Age = 34)) AND (Email contains \"test.com\"))"
          (data/create-query [:and
-                             [:= :name "Junk"]
-                             [:= :age 34]
-                             [:contains :email "test.com"]])))
+                               [:= :name "Junk"]
+                               [:= :age 34]
+                               [:contains :email "test.com"]])))
   (is (= "(((Name = \"Junk\") OR (Age = 34)) OR (Email contains \"test.com\"))"
          (data/create-query [:or
                              [:= :name "Junk"]
@@ -126,7 +129,7 @@
                               [:= :name "Junk"]
                               [:= :age 34]]
                              [:contains :email "test.com"]])))
-    (is (= "((Name = \"Junk\") OR ((Age = 34) AND (Email contains \"test.com\")))"
+  (is (= "((Name = \"Junk\") OR ((Age = 34) AND (Email contains \"test.com\")))"
          (data/create-query [:or
                              [:= :name "Junk"]
                              [:and 
