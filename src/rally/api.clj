@@ -16,21 +16,22 @@
 (defn- valid-rest-api? [rest-api]
   (not (nil? (get-in rest-api [:request :cookie-store]))))
 
-(defn- check-for-rally-errors [response]
+(defn- check-for-rally-errors [api response]
   (let [errors (:errors response)]
     (cond
-     (empty? errors)          response
-     (some not-found? errors) nil
-     :else                    (throw+ response "rally-errors: %s" errors))))
+      (empty? errors)                response
+      (:disable-throw-on-error? api) {:object response}
+      (some not-found? errors)       nil
+      :else                          (throw+ response "rally-errors: %s" errors))))
 
-(defn do-request [{:keys [middleware request]}]
+(defn do-request [{:keys [middleware request] :as api}]
   (client/with-middleware middleware
-    (-> (client/request request)
-        :body
-        data/->clojure-map
-        vals
-        first
-        check-for-rally-errors)))
+    (->> (client/request request)
+         :body
+         data/->clojure-map
+         vals
+         first
+         (check-for-rally-errors api))))
 
 (defn create!
   ([type] (create! *current-user* type {}))
