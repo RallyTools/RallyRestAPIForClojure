@@ -79,3 +79,6 @@
 
 (defn set-application-version [rest-api version]
   (add-headers rest-api {"X-RallyIntegrationVersion" version}))
+
+(defn disable-throw-on-error [rest-api]
+  (assoc rest-api :disable-throw-on-error? true))
