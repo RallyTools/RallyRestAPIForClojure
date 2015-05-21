@@ -140,19 +140,22 @@
       (.startsWith "http")))
 
 (defn- build-uri-for-type [host version type]
-  (let [requires-js (fn [version] (.startsWith (name version) "1"))
-        rally-type  (clojure-type->rally-type type)
-        rally-type  (if (requires-js version) (str rally-type ".js") rally-type)]
+  (let [rally-type  (clojure-type->rally-type type)]
     [host :slm :webservice version rally-type]))
 
 (defn ->uri-string [{:keys [host version]} uri & additional]
-  (let [base-uri   (cond
-                    (keyword? uri)    (->ref (build-uri-for-type host version uri))
-                    (uri-like? uri)   (->ref uri)
-                    (sequential? uri) (->ref (cons host uri))
-                    :else             (->ref uri))
-        additional (map ->str additional)]
-    (string/join "/" (cons base-uri additional))))
+
+  (let [base-uri     (cond
+                       (keyword? uri)    (->ref (build-uri-for-type host version uri))
+                       (uri-like? uri)   (->ref uri)
+                       (sequential? uri) (->ref (cons host uri))
+                       :else             (->ref uri))
+        additional   (map ->str additional)
+        uri-string   (string/join "/" (cons base-uri additional))
+        requires-js? (fn  [version] (.startsWith (name version) "1"))]
+    (if (requires-js? version)
+      (str uri-string ".js")
+      uri-string)))
 
 (defn create-fetch [fetch]
   (if (true? fetch)

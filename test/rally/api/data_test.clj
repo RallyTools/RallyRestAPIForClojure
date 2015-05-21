@@ -159,6 +159,10 @@
   (let [rally {:host "http://localhost:7001", :version :1.43}]
     (is (= "http://localhost:7001/slm/webservice/1.43/Defect.js" (data/->uri-string rally :defect)))))
 
+(deftest to-uri-string-should-handle-old-versions-with-additionals
+  (let [rally {:host "http://localhost:7001", :version :1.43}]
+    (is (= "http://localhost:7001/slm/webservice/1.43/Defect/create.js" (data/->uri-string rally :defect :create)))))
+
 (deftest convert-to-str
   (is (= "" (data/->str nil)))
   (is (= "100" (data/->str 100)))
