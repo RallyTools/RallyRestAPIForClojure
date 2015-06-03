@@ -1,5 +1,7 @@
 (ns rally.api-test 
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.core :as time]
+            [clj-time.coerce :as coerce]
+            [clojure.test :refer :all]
             [clojure.set :as set]
             [crypto.random :as random]
             [environ.core :as env]
@@ -256,6 +258,18 @@
         testcase (api/create! *rest-api* :test-case {:name (generate-string)})
         tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
     (is (= date (:date tcr)))))
+
+(deftest ^:integration datetimes-are-sent-to-and-from-server-correctly
+  (let [date     (time/now)
+        testcase (api/create! *rest-api* :test-case {:name (generate-string)})
+        tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
+    (is (= date (coerce/to-date-time (:date tcr))))))
+
+(deftest ^:integration datemidnight-are-sent-to-and-from-server-correctly
+  (let [date     (time/today-at-midnight)
+        testcase (api/create! *rest-api* :test-case {:name (generate-string)})
+        tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
+    (is (= date (coerce/to-date-time (:date tcr))))))
 
 (deftest ^:integration should-throw-exception-on-error
   (is (thrown? Exception (api/create! *rest-api* :junk-type {:junk-field "Super Junky"}))))

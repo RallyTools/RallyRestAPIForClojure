@@ -12,6 +12,7 @@
   (.writeString jg (format/unparse data/date-format (coerce/to-date-time date))))
 
 (encoding/add-encoder java.util.Date encode-date)
+(encoding/add-encoder org.joda.time.ReadableInstant encode-date)
 
 (defn set-query-param [rest-api name value]
   (assoc-in rest-api [:request :query-params name] value))
