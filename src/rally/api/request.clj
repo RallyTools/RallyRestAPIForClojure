@@ -1,10 +1,17 @@
 (ns rally.api.request
   (:require [cheshire.core :as json]
             [cheshire.generate :as encoding]
+            [clj-time.coerce :as coerce]
+            [clj-time.format :as format]
             [clojure.string :as string]
             [rally.api.data :as data]))
 
 (encoding/add-encoder java.net.URI encoding/encode-str)
+
+(defn encode-date [date jg]
+  (.writeString jg (format/unparse data/date-format (coerce/to-date-time date))))
+
+(encoding/add-encoder java.util.Date encode-date)
 
 (defn set-query-param [rest-api name value]
   (assoc-in rest-api [:request :query-params name] value))

@@ -6,6 +6,7 @@
   :dependencies [[camel-snake-kebab "0.3.1" :exclusions [org.clojure/clojure]]
                  
                  [clj-http "1.1.1"]
+                 [clj-time "0.9.0"]
 
                  [environ "1.0.0"]
 

@@ -1,6 +1,8 @@
 (ns rally.api.data
   (:require [camel-snake-kebab.core :as csk]
             [camel-snake-kebab.extras :as utils]
+            [clj-time.coerce :as coerce]
+            [clj-time.format :as format]
             [clojure.string :as string]
             [clojure.walk :as walk])
   (:import [java.net URI]
@@ -97,7 +99,8 @@
          p2)
         rally-type->clojure-type)))
 
-(def ^:const date-format "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+(def date-format (format/formatters :date-time))
+
 (defn- date? [key]
   (.contains (.toLowerCase (name key)) "date"))
 
@@ -105,7 +108,6 @@
   (letfn [(not-nil? [v] (not (or (empty? v) (= "null" v))))
           (transform [[k v]]
             (let [new-k  (->clojure-case k)
-                  parser (java.text.SimpleDateFormat. date-format)
                   new-v (case new-k
                           :metadata/type            (rally-type->clojure-type v)
                           :metadata/ref-object-uuid (when (not-nil? v) (UUID/fromString v))
@@ -115,7 +117,7 @@
                           :metadata/rally-api-minor (Integer/parseInt v)
                           v)
                   new-v (if (and (date? new-k) (not (nil? new-v)))
-                          (.parse parser new-v)
+                          (coerce/to-date (format/parse date-format new-v))
                           new-v)]
               [new-k new-v]))]
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))

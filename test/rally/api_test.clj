@@ -255,7 +255,7 @@
   (let [date     (java.util.Date.)
         testcase (api/create! *rest-api* :test-case {:name (generate-string)})
         tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
-    (is (= (class (:date tcr)) java.util.Date))))
+    (is (= date (:date tcr)))))
 
 (deftest ^:integration should-throw-exception-on-error
   (is (thrown? Exception (api/create! *rest-api* :junk-type {:junk-field "Super Junky"}))))
