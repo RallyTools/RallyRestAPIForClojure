@@ -104,6 +104,11 @@
 (defn- date? [key]
   (.contains (.toLowerCase (name key)) "date"))
 
+(defn- to-date [date-format raw-value]
+  (try
+    (coerce/to-date (format/parse date-format raw-value))
+    (catch Exception _ raw-value)))
+
 (defn ->clojure-map [m]
   (letfn [(not-nil? [v] (not (or (empty? v) (= "null" v))))
           (transform [[k v]]
@@ -117,7 +122,7 @@
                           :metadata/rally-api-minor (Integer/parseInt v)
                           v)
                   new-v (if (and (date? new-k) (not (nil? new-v)))
-                          (coerce/to-date (format/parse date-format new-v))
+                          (to-date date-format new-v)
                           new-v)]
               [new-k new-v]))]
     (walk/postwalk (fn [x] (if (map? x) (into {} (map transform x)) x)) m)))

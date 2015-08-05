@@ -45,7 +45,7 @@
 (deftest convert-clojure-type-to-rally-type
   (is (= data/user-story-rally-type (data/clojure-type->rally-type :user-story)))
   (is (= data/user-story-rally-type (data/clojure-type->rally-type :userstory)))
-  (is (= data/user-story-rally-type (data/clojure-type->rally-type :UserStory)))  
+  (is (= data/user-story-rally-type (data/clojure-type->rally-type :UserStory)))
   (is (= "security" (data/clojure-type->rally-type :security)))
   (is (= "Defect" (data/clojure-type->rally-type :defect)))
   (is (= "PortfolioItem/Feature" (data/clojure-type->rally-type :portfolio-item/feature))))
@@ -68,6 +68,10 @@
            (data/->clojure-map {:_ref "https://localhost/slm/webservice/v2.0/hierarchicalrequirement/1234"})))
     (is (= {:metadata/rally-api-major 2} (data/->clojure-map {:_rallyAPIMajor "2"})))
     (is (= {:metadata/rally-api-minor 0} (data/->clojure-map {:_rallyAPIMinor "0"})))))
+
+(deftest convert-to-date-or-string-in-clojure-map
+  (is (= {:query-result {:date-time-format "MM/dd/yyyy hh:mm:ss a"}} (data/->clojure-map {:QueryResult {:DateTimeFormat "MM/dd/yyyy hh:mm:ss a"}})))
+  (is (= {:query-result {:some-date-field #inst "2015-10-23T00:00:00.000-00:00"}} (data/->clojure-map {:QueryResult {:SomeDateField "2015-10-23T00:00:00.000Z"}}))))
 
 (deftest create-fetch-should-translate-names
   (let [fetch [:name :formatted-id :object-id :description]]
@@ -125,14 +129,14 @@
                              [:contains :email "test.com"]])))
   (is (= "(((Name = \"Junk\") AND (Age = 34)) OR (Email contains \"test.com\"))"
          (data/create-query [:or
-                             [:and 
+                             [:and
                               [:= :name "Junk"]
                               [:= :age 34]]
                              [:contains :email "test.com"]])))
   (is (= "((Name = \"Junk\") OR ((Age = 34) AND (Email contains \"test.com\")))"
          (data/create-query [:or
                              [:= :name "Junk"]
-                             [:and 
+                             [:and
                               [:= :age 34]
                               [:contains :email "test.com"]]]))))
 
