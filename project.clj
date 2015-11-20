@@ -3,12 +3,14 @@
   :url "https://github.com/RallyTools/RallyRestAPIForClojure"
   :license {:name "MIT License"
             :url "http://en.wikipedia.org/wiki/MIT_License"}
-  :dependencies [[camel-snake-kebab "0.3.1" :exclusions [org.clojure/clojure]]
-                 
-                 [clj-http "1.1.1"]
-                 [clj-time "0.9.0"]
+  :dependencies [[camel-snake-kebab "0.3.2" :exclusions [org.clojure/clojure]]
 
-                 [environ "1.0.0"]
+                 [cheshire "5.5.0"]
+
+                 [clj-http "2.0.0"]
+                 [clj-time "0.11.0" :exclusions [org.clojure/clojure]]
+
+                 [environ "1.0.1"]
 
                  [slingshot "0.12.2"]]
   :jvm-opts ["-Xmx1g"]
@@ -17,5 +19,5 @@
   :plugins [[lein-pprint "1.1.1"]]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[criterium "0.4.3"]
-                                  [org.clojure/clojure "1.7.0-RC1"]
+                                  [org.clojure/clojure "1.8.0-RC2"]
                                   [crypto-random "1.2.0"]]}})
