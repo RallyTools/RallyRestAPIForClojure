@@ -80,6 +80,15 @@
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
+(deftest ^:integration objects-can-be-copied
+  (let [userstory-name      (generate-string)
+        userstory           (api/create! *rest-api* :userstory {:name userstory-name})
+        userstory-copy-name (str "(Copy of) " userstory-name)
+        userstory-copy      (api/copy! *rest-api* userstory)]
+    (is (= (:name userstory-copy) userstory-copy-name))
+    (is (not= (:object-id userstory-copy) (:object-id userstory)))))
+
+
 (deftest ^:integration objects-can-be-updated-with-current-user
   (binding [api/*current-user* *rest-api*]
     (let [userstory-name (generate-string)

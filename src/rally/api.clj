@@ -51,6 +51,21 @@
          do-request
          :object))))
 
+(defn copy!
+  ([ref-or-object]
+   (copy! *current-user* ref-or-object))
+  
+  ([rest-api ref-or-object]
+   {:pre [(valid-rest-api? rest-api)]}
+   (let [ref  (data/->ref ref-or-object)
+         type (or (:metadata/type ref-or-object) (data/rally-ref->clojure-type ref))]
+     (-> rest-api
+         (request/set-method :post)
+         (request/set-uri ref "copy")
+         (request/set-body-as-map type {})
+         do-request
+         :object))))
+
 (defn update!
   ([ref-or-object updated-data]
    (update! *current-user* ref-or-object updated-data))
