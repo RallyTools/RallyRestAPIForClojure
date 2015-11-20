@@ -9,7 +9,8 @@
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/create" (request/get-url (request/set-uri rest-api :defect "create"))))
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/1234" (request/get-url (request/set-uri rest-api :defect 1234))))    
     (is (= "http://localhost:7001/slm/webservice/v2.0/Defect/create/me" (request/get-url (request/set-uri rest-api :defect "create" "me"))))
-    (is (= "http://localhost:7001/slm/webservice/v2.0/security/authorize" (request/get-url (request/set-uri rest-api :security :authorize))))))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/security/authorize" (request/get-url (request/set-uri rest-api :security :authorize))))
+    (is (= "http://localhost:7001/slm/webservice/v2.0/Portfolioitem/feature/1234/copy" (request/get-url (request/set-uri rest-api :portfolioitem :feature 1234 "copy"))))))
 
 (deftest set-url-should-translate-objects-to-refs
   (let [rest-api {:rally {:host "http://localhost:7001" :version :v2.0}}]

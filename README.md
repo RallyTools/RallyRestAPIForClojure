@@ -1,6 +1,6 @@
 # RallyRestAPIForClojure
 
-RallyRestAPIForClojure is a Clojure library to access your Rally data. It currently supports querying, creates, reads, updates and deletes. If you would like more inforamtion on the Rally Rest API please see Rally's [Web Services API documentation](https://rally1.rallydev.com/slm/doc/webservice).
+RallyRestAPIForClojure is a Clojure library to access your Rally data. It currently supports querying, creates, reads, updates and deletes. If you would like more information on the Rally Rest API please see Rally's [Web Services API documentation](https://rally1.rallydev.com/slm/doc/webservice).
 
 [![Build Status](https://travis-ci.org/RallyTools/RallyRestAPIForClojure.svg?branch=master)](https://travis-ci.org/RallyTools/RallyRestAPIForClojure)
 
@@ -55,7 +55,7 @@ A couple of things to notice about this first example:
 * api/query returns a lazy seq of all the paged results.
 
 #### Rally Keyword -> Clojure Keyword Tranlation
-The rest API tries to make working with Rally in Clojure seem natrual. Most of the translations Rally->Clojure and Clojure->Rally are done with a library called [camel-snake-kebab](https://github.com/qerub/camel-snake-kebab).
+The rest API tries to make working with Rally in Clojure seem natural. Most of the translations Rally->Clojure and Clojure->Rally are done with a library called [camel-snake-kebab](https://github.com/qerub/camel-snake-kebab).
 When going from Rally -> Clojure we use the [->kebab-case-keyword](https://github.com/qerub/camel-snake-kebab/blob/stable/src/camel_snake_kebab/core.cljx#L20) translation.
 
 ```clojure
@@ -202,6 +202,19 @@ that takes 2 parameters. The parameters are a type and a data map. The type is t
 (api/update! rest-api my-user-story {:parent my-parent})
 ```
 
+### Copying data
+```clojure
+;; Copy an artifact
+(def my-defect (api/create! rest-api :defect {:name "This defect can be copied"}))
+(api/copy! rest-api my-defect)
+; => {:description "",
+;     :formatted-id "D342",
+;     :tags {:metadata/rally-api,
+;     ...
+;     :metadata/ref-object-name "(Copy of) This defect can be copied",
+;     ...}
+```
+
 ## License
 
 Copyright (c) Rally Software Development Corp. 2013-2015 Distributed under the MIT License.
@@ -213,4 +226,12 @@ The Rally REST API for Clojure is available on an as-is basis.
 ## Support
 
 Rally Software does not actively maintain or support this toolkit.  If you have a question or problem, we recommend posting it to Stack Overflow: http://stackoverflow.com/questions/ask?tags=rally
+
+##Running the tests
+
+1. Start up alm
+2. Create test data
+3. Back in the RallyRestAPIForClojure directory, add a `.lein-env` file containing
+```{:username "ue@test.com" :password "Password" :rally-host "http://localhost:7001"}```
+4. Run `lein test` or, for a smaller subset of the tests, `lein test :only rally.api-test` or `lein test :only rally.api-test/objects-can-be-copied`
 
