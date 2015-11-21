@@ -25,6 +25,7 @@
   (is (= "_ref" (data/->rally-case :metadata/ref)))
   (is (= "FormattedID" (data/->rally-case :formatted-id)))
   (is (= "_objectVersion" (data/->rally-case :metadata/object-version)))
+  (is (= "SubscriptionUUID" (data/->rally-case :subscription-uuid)))
   (is (= "c_MyCustomField" (data/->rally-case :custom/my-custom-field))))
 
 (deftest convert-from-rally-to-clojure-case
