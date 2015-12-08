@@ -89,4 +89,7 @@
   (add-headers rest-api {"X-RallyIntegrationVersion" version}))
 
 (defn disable-throw-on-error [rest-api]
-  (assoc rest-api :disable-throw-on-error? true))
+  (-> (assoc-in rest-api [:request :throw-exceptions] false)
+      (assoc :disable-throw-on-error? true)
+
+      ))

@@ -4,7 +4,8 @@
             [clj-http.cookies :as cookies]
             [environ.core :as env]
             [rally.api.data :as data]
-            [rally.api.request :as request])
+            [rally.api.request :as request]
+            [rally.api.testing :as testing])
   (:use [slingshot.slingshot :only [throw+]])
   (:refer-clojure :exclude [find]))
 
@@ -26,12 +27,20 @@
 
 (defn do-request [{:keys [middleware request] :as api}]
   (client/with-middleware middleware
-    (->> (client/request request)
-         :body
-         data/->clojure-map
-         vals
-         first
-         (check-for-rally-errors api))))
+    (let [mode     (testing/mode)
+          response (if (= mode :playback)
+                     (testing/do-playback api)
+                     (->> request
+                          client/request
+                          (testing/do-record api)))]
+      (if (string? (:body response))
+        (check-for-rally-errors api response)
+        (->> response
+             :body
+             data/->clojure-map
+             vals
+             first
+             (check-for-rally-errors api))))))
 
 (defn create!
   ([type] (create! *current-user* type {}))
