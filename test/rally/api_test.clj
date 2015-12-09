@@ -1,43 +1,42 @@
 (ns rally.api-test 
-  (:require [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
-            [clojure.test :refer :all]
+  (:require [clj-time.coerce :as coerce]
+            [clj-time.core :as time]
             [clojure.set :as set]
+            [clojure.test :refer :all]
             [crypto.random :as random]
             [environ.core :as env]
+            [clj-http.client :as http]
             [rally.api :as api]
             [rally.api.data :as data]
-            [rally.api.request :as request]))
+            [rally.api.request :as request]
+            [rally.api.testing :as testing]
+            [rally.helper :refer [*rest-api*] :as helper]))
 
-(def ^:dynamic *rest-api*)
-(def generate-string (partial random/base32 15))
+(use-fixtures :each helper/api-fixture)
 
-(defn api-fixture [f]
-  (let [default-data (fn [type data] (merge {:name (generate-string)} data))
-        rest-api     (request/set-default-data-fn (api/create-rest-api) default-data)]
-    (try
-      (binding [*rest-api* rest-api]
-        (f))
-      (finally (api/shutdown-rest-api rest-api)))))
-
-(use-fixtures :each api-fixture)
+(deftest ^:integration objects-can-be-created-recording
+  (let [userstory-name "userstory-name"
+        userstory      (-> *rest-api*
+                           (api/create! :userstory {:name userstory-name}))]
+    (is (= (:metadata/ref-object-name userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-created
-  (let [userstory-name (generate-string)
-        userstory      (api/create! *rest-api* :userstory {:name userstory-name})]
+  (let [userstory-name (helper/generate-string)
+        userstory      (-> *rest-api*
+                           (api/create! :userstory {:name userstory-name}))]
     (is (= (:metadata/ref-object-name userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-created-with-current-user
   (binding [api/*current-user* *rest-api*]
-    (let [userstory-name (generate-string)
+    (let [userstory-name (helper/generate-string)
         userstory      (api/create! :userstory {:name userstory-name})]
       (is (= (:metadata/ref-object-name userstory) userstory-name)))))
 
 (deftest ^:integration an-error-occurs-when-trying-to-create-object-without-binding-current-user
-  (is (thrown? AssertionError (api/create! :userstory {:name (generate-string)}))))
+  (is (thrown? AssertionError (api/create! :userstory {:name (helper/generate-string)}))))
 
 (deftest ^:integration objects-can-be-queried-by-formatted-id
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
@@ -49,39 +48,39 @@
     (is (= (:metadata/ref-object-name artifact) (:metadata/ref-object-name defect)))))
 
 (deftest ^:integration older-versions-of-webservices-can-be-used
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id (request/set-version *rest-api* :1.43) :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-queried-by-id
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find-by-id *rest-api* :userstory (:object-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-queried-by-id-with-current-user
   (binding [api/*current-user* *rest-api*]
-    (let [userstory-name (generate-string)
+    (let [userstory-name (helper/generate-string)
           userstory      (api/create! :userstory {:name userstory-name})
           read-userstory (api/find-by-id :userstory (:object-id userstory))]
       (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
 
 (deftest ^:integration objects-can-be-queried-by-uuid
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find-by-id *rest-api* :userstory (:metadata/ref-object-uuid userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-updated
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory)
         _              (api/update! *rest-api* userstory {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-copied
-  (let [userstory-name      (generate-string)
+  (let [userstory-name      (helper/generate-string)
         userstory           (api/create! *rest-api* :userstory {:name userstory-name})
         userstory-copy-name (str "(Copy of) " userstory-name)
         userstory-copy      (api/copy! *rest-api* userstory)]
@@ -91,31 +90,31 @@
 
 (deftest ^:integration objects-can-be-updated-with-current-user
   (binding [api/*current-user* *rest-api*]
-    (let [userstory-name (generate-string)
+    (let [userstory-name (helper/generate-string)
           userstory      (api/create! :userstory)
           _              (api/update! userstory {:name userstory-name})
           read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
       (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
 
 (deftest ^:integration an-error-occurs-when-trying-to-update-object-without-binding-current-user
-  (is (thrown? AssertionError (api/update! :userstory {:name (generate-string)}))))
+  (is (thrown? AssertionError (api/update! :userstory {:name (helper/generate-string)}))))
 
 (deftest ^:integration objects-can-be-updated-using-just-ref
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory)
         _              (api/update! *rest-api* (:metadata/ref userstory) {:name userstory-name})
         read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-found-by-ref
-  (let [userstory-name (generate-string)
+  (let [userstory-name (helper/generate-string)
         userstory      (api/create! *rest-api* :userstory {:name userstory-name})
         read-userstory (api/find *rest-api* (:metadata/ref userstory))]
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-found-by-ref-with-current-user
   (binding [api/*current-user* *rest-api*]
-    (let [userstory-name (generate-string)
+    (let [userstory-name (helper/generate-string)
           userstory      (api/create! :userstory {:name userstory-name})
           read-userstory (api/find (:metadata/ref userstory))]
       (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
@@ -134,8 +133,8 @@
       (is (nil? read-userstory)))))
 
 (deftest ^:integration query-seq-should-cross-pages
-  (let [prefix              (generate-string)
-        created-userstories (doall (repeatedly 21 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
+  (let [prefix              (helper/generate-string)
+        created-userstories (doall (repeatedly 21 #(api/create! *rest-api* :userstory {:name (str prefix (helper/generate-string))})))
         userstory-seq       (api/query *rest-api* :userstory {:start 1 :pagesize 10 :query [:contains :name prefix]})
 
         created-refs        (map :metadata/ref created-userstories)
@@ -144,8 +143,8 @@
     (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
 
 (deftest ^:integration query-seq-should-cross-pages-with-default-start-and-pagesizes
-  (let [prefix              (generate-string)
-        created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
+  (let [prefix              (helper/generate-string)
+        created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory {:name (str prefix (helper/generate-string))})))
         userstory-seq       (api/query *rest-api* :userstory {:query [:contains :name prefix]})
 
         created-refs        (map :metadata/ref created-userstories)
@@ -186,7 +185,7 @@
     (is (= (sort (map :metadata/ref-object-name created-defects)) (sort (map :metadata/ref-object-name defects))))))
 
 (deftest ^:integration nested-relationships-can-be-queried
-  (let [parent-name (generate-string)
+  (let [parent-name (helper/generate-string)
         parent      (api/create! *rest-api* :userstory {:name parent-name})
         child       (api/create! *rest-api* :userstory {:parent parent})
         found-child (first (api/query *rest-api* :userstory [:= :parent.name parent-name]))]
@@ -237,8 +236,8 @@
     (is (= (:metadata/ref parent) (:metadata/ref (:parent updated-child))))))
 
 (deftest ^:integration vector-is-converted-to-query-spec
-  (let [prefix              (generate-string)
-        created-userstories (doall (repeatedly 21 #(api/create! *rest-api* :userstory {:name (str prefix (generate-string))})))
+  (let [prefix              (helper/generate-string)
+        created-userstories (doall (repeatedly 21 #(api/create! *rest-api* :userstory {:name (str prefix (helper/generate-string))})))
         userstory-seq       (api/query *rest-api* :userstory [:contains :name prefix])
 
         created-refs        (map :metadata/ref created-userstories)
@@ -257,26 +256,26 @@
     (= [child] (api/query *rest-api* :userstory [:= :parent parent]))))
 
 (deftest ^:integration can-create-portfolio-items
-  (let [feature-name (generate-string)
+  (let [feature-name (helper/generate-string)
         feature      (api/create! *rest-api* :portfolio-item/feature {:name feature-name})
         read-feature (api/find *rest-api* (:metadata/ref feature))]
     (is (= (:metadata/ref-object-name read-feature) feature-name))))
 
 (deftest ^:integration dates-are-sent-to-and-from-server-correctly
   (let [date     (java.util.Date.)
-        testcase (api/create! *rest-api* :test-case {:name (generate-string)})
+        testcase (api/create! *rest-api* :test-case {:name (helper/generate-string)})
         tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
     (is (= date (:date tcr)))))
 
 (deftest ^:integration datetimes-are-sent-to-and-from-server-correctly
   (let [date     (time/now)
-        testcase (api/create! *rest-api* :test-case {:name (generate-string)})
+        testcase (api/create! *rest-api* :test-case {:name (helper/generate-string)})
         tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
     (is (= date (coerce/to-date-time (:date tcr))))))
 
 (deftest ^:integration datemidnight-are-sent-to-and-from-server-correctly
   (let [date     (time/today-at-midnight)
-        testcase (api/create! *rest-api* :test-case {:name (generate-string)})
+        testcase (api/create! *rest-api* :test-case {:name (helper/generate-string)})
         tcr      (api/create! *rest-api* :test-case-result {:build 1 :date date :test-case testcase :verdict "Blocked"})]
     (is (= date (coerce/to-date-time (:date tcr))))))
 
@@ -286,3 +285,10 @@
 (deftest ^:integration can-disable-throw-on-bad-request
   (let [response (api/create! (request/disable-throw-on-error *rest-api*) :junk-type {:junk-field "Super Junky"})]
     (is (= 1 (-> response :errors count)))))
+
+(deftest ^:integration can-disable-throw-on-bad-http-response-code
+  (let [response (-> *rest-api*
+                     request/disable-throw-on-error
+                     (request/set-uri "http://localhost:7001/totally-bogus")
+                     api/do-request)]
+    (is (= 404 (:status response)))))
