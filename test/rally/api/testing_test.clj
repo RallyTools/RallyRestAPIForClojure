@@ -71,3 +71,21 @@
     (testing/override-mode! :playback)
     (testing/record-playback-fixture "queryparams" (action-generator "Blah,SomeID,ZuulID"))
     (testing/override-mode! nil)))
+
+(deftest ^:integration should-use-header-matcher-override-if-available
+  (let [matcher          (fn [request-headers potential-match-headers]
+                           (= (-> request-headers :test even?)
+                              (-> potential-match-headers :test even?)))
+        action-generator (fn [header-value]
+                           (fn []
+                             (-> *rest-api*
+                                 (request/add-headers {:test header-value})
+                                 (api/create! :userstory {:name "userstory-name"}))))]
+    (testing/override-header-matcher! matcher)
+    (testing/override-mode! :record)
+    (testing/override-directory! ".test-data")
+    (testing/record-playback-fixture "queryparams" (action-generator 6))
+    (testing/override-mode! :playback)
+    (testing/record-playback-fixture "queryparams" (action-generator 2))
+    (testing/override-mode! nil)
+    (testing/override-header-matcher! nil)))
