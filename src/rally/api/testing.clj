@@ -8,12 +8,16 @@
 
 (def ^:private -mode (atom nil))
 (def ^:private -directory (atom nil))
+(def ^:private header-matcher (atom nil))
 
 (defn override-mode! [value]
   (reset! -mode value))
 
 (defn override-directory! [value]
   (reset! -directory value))
+
+(defn override-header-matcher! [matcher]
+  (reset! header-matcher matcher))
 
 (defn directory []
   (or @-directory
@@ -40,19 +44,22 @@
   (swap! *recordings* conj {:request (select-keys (:request api) [:url :query-params :method :body :headers])
                             :response response}))
 
-(defn- find-playback-data-for-response
-  [{:keys [url query-params method headers]}]
+(defn- find-playback-data-for-response [{:keys [url query-params method headers]}]
   (when *recordings*
     (let [keywordized-headers (walk/keywordize-keys headers)
-          matching-requests (->> @*recordings*
-                                 (filter (fn [d] (= url (-> d :request :url))))
-                                 (filter (fn [d] (= method (-> d :request :method keyword))))
-                                 (filter (fn [d] (= keywordized-headers (-> d :request :headers))))
-                                 (filter (fn [d]
-                                           (let [qp (-> d :request :query-params)]
-                                             (if (or (:fetch query-params) (:fetch qp))
-                                               (= (set (str/split (:fetch query-params) #",")) (set (str/split (:fetch qp) #",")))
-                                               true)))))]
+          matching-requests   (->> @*recordings*
+                                   (filter (fn [d] (= url (-> d :request :url))))
+                                   (filter (fn [d] (= method (-> d :request :method keyword))))
+                                   (filter (fn [d] (let [potential-match-headers (-> d :request :headers)]
+                                                     (if @header-matcher
+                                                       (@header-matcher keywordized-headers potential-match-headers)
+                                                       (= keywordized-headers potential-match-headers)))))
+                                   (filter (fn [d]
+                                             (let [qp (-> d :request :query-params)]
+                                               (if (or (:fetch query-params) (:fetch qp))
+                                                 (= (set (str/split (:fetch query-params) #","))
+                                                    (set (str/split (:fetch qp) #",")))
+                                                 true)))))]
       (cond
         (empty? matching-requests)
         (throw+ {:message      "could not find matching request for playback"
@@ -89,4 +96,3 @@
   (when (= (mode) :record)
     (gather-data api response))
   response)
-
