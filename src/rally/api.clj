@@ -227,7 +227,9 @@
      (let [rally-host (or (env/env :rally-host) "https://rally1.rallydev.com")]
        (create-rest-api credentials rally-host)))
   ([{:keys [api-key] :as credentials} rally-host]
-     (let [connection-manager (conn-mgr/make-reusable-conn-manager {})
+     (create-rest-api credentials rally-host {}))
+  ([{:keys [api-key] :as credentials} rally-host conn-props]
+   (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
            rest-api           {:request       {:connection-manager connection-manager
                                                :cookie-store       (cookies/cookie-store)
                                                :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
@@ -243,7 +245,7 @@
                                 (request/add-headers rest-api {:zsessionid api-key})
                                 (request/set-security-token rest-api (security-token rest-api credentials)))
            current-project    (find rest-api :project {})]
-    (request/set-current-project rest-api current-project))))
+       (request/set-current-project rest-api current-project))))
 
 (defn shutdown-rest-api [rest-api]
   (conn-mgr/shutdown-manager (get-in rest-api [:request :connection-manager]))
