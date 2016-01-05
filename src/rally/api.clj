@@ -215,37 +215,51 @@
       do-request
       :security-token))
 
+(defn create-basic-rest-api
+  "Create a rest-api, but do not make any calls to the server."
+  [{:keys [api-key] :as credentials} rally-host conn-props]
+  (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
+        rest-api           {:request       {:connection-manager connection-manager
+                                            :cookie-store       (cookies/cookie-store)
+                                            :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
+                                                                 "X-RallyIntegrationPlatform" (env/env "java.version")
+                                                                 "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
+                                            :debug              (or (env/env :debug-rally-rest) false)
+                                            :method             :get
+                                            :as                 :json}
+                            :rally         {:host    rally-host
+                                            :version :v2.0}
+                            :middleware    client/default-middleware}]
+    (if api-key
+      (request/add-headers rest-api {:zsessionid api-key})
+      rest-api)))
+
+(defn init-rest-api
+  "Sets the current project, and the the security token (if applicable)."
+  [rest-api {:keys [api-key] :as credentials}]
+  (let [rest-api        (if api-key
+                          rest-api
+                          (request/set-security-token rest-api (security-token rest-api credentials)))
+        current-project (find rest-api :project {})]
+    (request/set-current-project rest-api current-project)))
+
 (defn create-rest-api
+  "Create and initialize a rest-api."
   ([]
-     (let [username   (env/env :username)
-           password   (env/env :password)
-           api-key    (env/env :api-key)]
-       (create-rest-api {:username   username
-                         :password   password
-                         :api-key    api-key})))
+   (let [username   (env/env :username)
+         password   (env/env :password)
+         api-key    (env/env :api-key)]
+     (create-rest-api {:username   username
+                       :password   password
+                       :api-key    api-key})))
   ([credentials]
-     (let [rally-host (or (env/env :rally-host) "https://rally1.rallydev.com")]
-       (create-rest-api credentials rally-host)))
-  ([{:keys [api-key] :as credentials} rally-host]
-     (create-rest-api credentials rally-host {}))
+   (let [rally-host (or (env/env :rally-host) "https://rally1.rallydev.com")]
+     (create-rest-api credentials rally-host)))
+  ([credentials rally-host]
+   (create-rest-api credentials rally-host {}))
   ([{:keys [api-key] :as credentials} rally-host conn-props]
-   (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
-           rest-api           {:request       {:connection-manager connection-manager
-                                               :cookie-store       (cookies/cookie-store)
-                                               :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
-                                                                    "X-RallyIntegrationPlatform" (env/env "java.version")
-                                                                    "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
-                                               :debug              (or (env/env :debug-rally-rest) false)
-                                               :method             :get
-                                               :as                 :json}
-                               :rally         {:host    rally-host
-                                               :version :v2.0}
-                               :middleware    client/default-middleware}
-           rest-api           (if api-key
-                                (request/add-headers rest-api {:zsessionid api-key})
-                                (request/set-security-token rest-api (security-token rest-api credentials)))
-           current-project    (find rest-api :project {})]
-       (request/set-current-project rest-api current-project))))
+   (let [rest-api (create-basic-rest-api credentials rally-host conn-props)]
+     (init-rest-api rest-api credentials))))
 
 (defn shutdown-rest-api [rest-api]
   (conn-mgr/shutdown-manager (get-in rest-api [:request :connection-manager]))
