@@ -25,22 +25,21 @@
       (some not-found? errors)       nil
       :else                          (throw+ response "rally-errors: %s" errors))))
 
-(defn do-request [{:keys [middleware request] :as api}]
-  (client/with-middleware middleware
-    (let [mode     (testing/mode)
-          response (if (= mode :playback)
-                     (testing/do-playback api)
-                     (->> request
-                          client/request
-                          (testing/do-record api)))]
-      (if (string? (:body response))
-        (check-for-rally-errors api response)
-        (->> response
-             :body
-             data/->clojure-map
-             vals
-             first
-             (check-for-rally-errors api))))))
+(defn do-request [{:keys [request] :as api}]
+  (let [mode     (testing/mode)
+        response (if (= mode :playback)
+                   (testing/do-playback api)
+                   (->> request
+                        client/request
+                        (testing/do-record api)))]
+    (if (string? (:body response))
+      (check-for-rally-errors api response)
+      (->> response
+           :body
+           data/->clojure-map
+           vals
+           first
+           (check-for-rally-errors api)))))
 
 (defn create!
   ([type] (create! *current-user* type {}))
@@ -219,17 +218,16 @@
   "Create a rest-api, but do not make any calls to the server."
   [{:keys [api-key] :as credentials} rally-host conn-props]
   (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
-        rest-api           {:request       {:connection-manager connection-manager
-                                            :cookie-store       (cookies/cookie-store)
-                                            :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
-                                                                 "X-RallyIntegrationPlatform" (env/env "java.version")
-                                                                 "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
-                                            :debug              (or (env/env :debug-rally-rest) false)
-                                            :method             :get
-                                            :as                 :json}
-                            :rally         {:host    rally-host
-                                            :version :v2.0}
-                            :middleware    client/default-middleware}]
+        rest-api           {:request {:connection-manager connection-manager
+                                      :cookie-store       (cookies/cookie-store)
+                                      :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
+                                                           "X-RallyIntegrationPlatform" (env/env "java.version")
+                                                           "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
+                                      :debug              (or (env/env :debug-rally-rest) false)
+                                      :method             :get
+                                      :as                 :json}
+                            :rally   {:host    rally-host
+                                      :version :v2.0}}]
     (if api-key
       (request/add-headers rest-api {:zsessionid api-key})
       rest-api)))
