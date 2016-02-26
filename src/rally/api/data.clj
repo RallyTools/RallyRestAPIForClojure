@@ -26,7 +26,8 @@
    (metadata-name? n)     (str "_" (csk/->camelCaseString n))
    (custom-field-name? n) (str "c_" (csk/->PascalCaseString n))
    :else                  (-> (csk/->PascalCaseString n)
-                              (.replace "Id" "ID"))))
+                              (.replace "Id" "ID")
+                              (.replace "Uuid" "UUID"))))
 (defn ->clojure-case [k]
   (cond
    (metadata-name? k)     (keyword "metadata" (csk/->kebab-case-string k))
