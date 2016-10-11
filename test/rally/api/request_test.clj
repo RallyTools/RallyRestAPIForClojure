@@ -25,6 +25,8 @@
   (let [rest-api {:request {:query-params {:project 123, :start 1, :pagesize 20}}}]
     (is (= "(Name = \"Jane\")" (request/get-query-param (request/merge-query-params rest-api {:query [:= :name "Jane"]}) :query)))
     (is (= "Name,Description" (request/get-query-param (request/merge-query-params rest-api {:fetch [:name :description]}) :fetch)))
+    (is (= "true,Name" (request/get-query-param (request/merge-query-params rest-api {:fetch [true :name]}) :fetch)))
+    (is (= "trust me" (request/get-query-param (request/merge-query-params rest-api {:fetch "trust me"}) :fetch)))
     (is (= "Name desc" (request/get-query-param (request/merge-query-params rest-api {:order [[:name :desc]]}) :order)))
     (is (= 20 (request/get-query-param (request/merge-query-params rest-api {}) :pagesize)))))
 
