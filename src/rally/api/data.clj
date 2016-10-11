@@ -23,10 +23,13 @@
 
 (defn ->rally-case [n]
   (cond
-   (metadata-name? n)     (str "_" (csk/->camelCaseString n))
-   (custom-field-name? n) (str "c_" (csk/->PascalCaseString n))
-   :else                  (-> (csk/->PascalCaseString n)
-                              (.replace "Id" "ID"))))
+    (true? n)              "true"
+    (false? n)             "false"
+    (metadata-name? n)     (str "_" (csk/->camelCaseString n))
+    (custom-field-name? n) (str "c_" (csk/->PascalCaseString n))
+    :else                  (-> n
+                               csk/->PascalCaseString
+                               (.replace "Id" "ID"))))
 (defn ->clojure-case [k]
   (cond
    (metadata-name? k)     (keyword "metadata" (csk/->kebab-case-string k))
@@ -112,7 +115,7 @@
 (defn ->clojure-map [m]
   (letfn [(not-nil? [v] (not (or (empty? v) (= "null" v))))
           (transform [[k v]]
-            (let [new-k  (->clojure-case k)
+            (let [new-k (->clojure-case k)
                   new-v (case new-k
                           :metadata/type            (rally-type->clojure-type v)
                           :metadata/ref-object-uuid (when (not-nil? v) (UUID/fromString v))
@@ -165,10 +168,13 @@
       uri-string)))
 
 (defn create-fetch [fetch]
-  (if (true? fetch)
-    "true"
-    (->> (map ->rally-case fetch)
-         (string/join ","))))
+  (cond
+    (string? fetch) fetch
+    (true? fetch)   "true"
+    (false? fetch)  "false"
+    :else           (->> fetch
+                         (map ->rally-case)
+                         (string/join ","))))
 
 (defn create-order [orders]
   (let [direction? #{:asc :desc}
