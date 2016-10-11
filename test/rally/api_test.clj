@@ -1,24 +1,16 @@
-(ns rally.api-test 
+(ns rally.api-test
   (:require [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [clojure.set :as set]
             [clojure.test :refer :all]
             [crypto.random :as random]
             [environ.core :as env]
-            [clj-http.client :as http]
             [rally.api :as api]
             [rally.api.data :as data]
             [rally.api.request :as request]
-            [rally.api.testing :as testing]
             [rally.helper :refer [*rest-api*] :as helper]))
 
 (use-fixtures :each helper/api-fixture)
-
-(deftest ^:integration objects-can-be-created-recording
-  (let [userstory-name "userstory-name"
-        userstory      (-> *rest-api*
-                           (api/create! :userstory {:name userstory-name}))]
-    (is (= (:metadata/ref-object-name userstory) userstory-name))))
 
 (deftest ^:integration objects-can-be-created
   (let [userstory-name (helper/generate-string)

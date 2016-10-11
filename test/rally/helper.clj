@@ -4,6 +4,7 @@
             [rally.api.request :as request]))
 
 (def ^:dynamic *rest-api*)
+
 (def generate-string (partial random/base32 15))
 
 (defn api-fixture [f]
@@ -12,5 +13,5 @@
     (try
       (binding [*rest-api* rest-api]
         (f))
-      (finally (api/shutdown-rest-api rest-api)))))
-
+      (finally
+        (api/shutdown-rest-api rest-api)))))
