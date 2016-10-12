@@ -22,13 +22,13 @@
   (is (= "{\"HierarchicalRequirement\":{\"Name\":\"Jane\"}}" (request/get-body (request/set-body-as-map {} :userstory {:name "Jane"})))))
 
 (deftest merge-query-params-should-translate-values
-  (let [rest-api {:request {:query-params {:project 123, :start 1, :pagesize 20}}}]
+  (let [rest-api {:request {:query-params {:project 123, :start 1, :pagesize 10}}}]
     (is (= "(Name = \"Jane\")" (request/get-query-param (request/merge-query-params rest-api {:query [:= :name "Jane"]}) :query)))
     (is (= "Name,Description" (request/get-query-param (request/merge-query-params rest-api {:fetch [:name :description]}) :fetch)))
     (is (= "true,Name" (request/get-query-param (request/merge-query-params rest-api {:fetch [true :name]}) :fetch)))
     (is (= "trust me" (request/get-query-param (request/merge-query-params rest-api {:fetch "trust me"}) :fetch)))
     (is (= "Name desc" (request/get-query-param (request/merge-query-params rest-api {:order [[:name :desc]]}) :order)))
-    (is (= 20 (request/get-query-param (request/merge-query-params rest-api {}) :pagesize)))))
+    (is (= 10 (request/get-query-param (request/merge-query-params rest-api {}) :pagesize)))))
 
 (deftest set-application-vendor-should-add-header
   (let [rest-api {:request {:headers {"Header-1" "value 1"}}}
