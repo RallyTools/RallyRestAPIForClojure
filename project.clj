@@ -14,5 +14,6 @@
   :plugins [[lein-pprint "1.1.1"]]
   :profiles {:dev {:jvm-opts     ["-Xmx1g"]
                    :source-paths ["dev"]
-                   :dependencies [[criterium "0.4.4"]
+                   :dependencies [[org.clojure/clojure "1.8.0"]
+                                  [criterium "0.4.4"]
                                   [crypto-random "1.2.0"]]}})
