@@ -25,12 +25,15 @@
       :else                          (throw+ response "rally-errors: %s" errors))))
 
 (defn do-request [{:keys [request] :as api}]
-  (->> (client/request request)
-       :body
-       data/->clojure-map
-       vals
-       first
-       (check-for-rally-errors api)))
+  (let [response (client/request request)]
+    (if (string? (:body response))
+      (check-for-rally-errors api response)
+      (->> response
+           :body
+           data/->clojure-map
+           vals
+           first
+           (check-for-rally-errors api)))))
 
 (defn create!
   ([type] (create! *current-user* type {}))
