@@ -179,11 +179,18 @@ that takes 2 parameters. The parameters are a type and a data map. The type is t
       (request/set-default-data-fn default-name)
       (api/create! rest-api :userstory)))
 ```
+If you want to pass request parameters such as fetch, pass them as a map:
+```clojure
+(api/create! rest-api :user-story {:name "This feature is really cool"} {:fetch :name})
+; => {:name "This feature is really cool",
+;     ...metadata... }
+```
 
 ### Updating Data
 ```clojure
 (def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
 (api/update! rest-api my-user-story {:description "This is my description"})
+(api/update! rest-api my-user-story {:description "Only return name for the response"} {:fetch :name})
 ```
 
 #### Updating Collections
