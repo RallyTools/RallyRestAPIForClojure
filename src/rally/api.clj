@@ -42,14 +42,20 @@
    (if (keyword? api-or-type)
      (create! *current-user* api-or-type type-or-data)
      (create! api-or-type type-or-data {})))
-  
-  ([rest-api type data]
+
+  ([api-or-type type-or-data data-or-query-params]
+   (if (keyword? api-or-type)
+     (create! *current-user* api-or-type type-or-data data-or-query-params)
+     (create! api-or-type type-or-data data-or-query-params {})))
+
+  ([rest-api type data query-params]
    {:pre [(valid-rest-api? rest-api)]}
    (let [default-data-fn (request/get-default-data-fn rest-api)]
      (-> rest-api
          (request/set-method :put)
          (request/set-uri type "create")
          (request/set-body-as-map type (default-data-fn type data))
+         (request/merge-query-params query-params)
          do-request
          :object))))
 
@@ -71,8 +77,13 @@
 (defn update!
   ([ref-or-object updated-data]
    (update! *current-user* ref-or-object updated-data))
-  
-  ([rest-api ref-or-object updated-data]
+
+  ([api-or-ref-or-object ref-or-object-or-updated-data updated-data-or-query-params]
+   (if (valid-rest-api? api-or-ref-or-object)
+     (update! api-or-ref-or-object ref-or-object-or-updated-data updated-data-or-query-params {})
+     (update! *current-user* api-or-ref-or-object ref-or-object-or-updated-data updated-data-or-query-params)))
+
+  ([rest-api ref-or-object updated-data query-params]
    {:pre [(valid-rest-api? rest-api)]}
    (let [ref  (data/->ref ref-or-object)
          type (or (:metadata/type ref-or-object) (data/rally-ref->clojure-type ref))]
@@ -80,6 +91,7 @@
          (request/set-method :post)
          (request/set-url ref)
          (request/set-body-as-map type updated-data)
+         (request/merge-query-params query-params)
          do-request
          :object))))
 

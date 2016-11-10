@@ -21,8 +21,22 @@
 (deftest ^:integration objects-can-be-created-with-current-user
   (binding [api/*current-user* *rest-api*]
     (let [userstory-name (helper/generate-string)
-        userstory      (api/create! :userstory {:name userstory-name})]
+          userstory      (api/create! :userstory {:name userstory-name})]
       (is (= (:metadata/ref-object-name userstory) userstory-name)))))
+
+(deftest ^:integration objects-can-be-created-with-fetch-true-param
+  (let [userstory-name (helper/generate-string)
+        userstory      (-> *rest-api*
+                           (api/create! :userstory {:name userstory-name} {:fetch true}))]
+    (is (contains? userstory :name))
+    (is (contains? userstory :ready))))
+
+(deftest ^:integration objects-can-be-created-with-fetch-name-param
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory-name (helper/generate-string)
+          userstory      (api/create! :userstory {:name userstory-name} {:fetch "Name"})]
+      (is (contains? userstory :name))
+      (is (not (contains? userstory :ready))))))
 
 (deftest ^:integration an-error-occurs-when-trying-to-create-object-without-binding-current-user
   (is (thrown? AssertionError (api/create! :userstory {:name (helper/generate-string)}))))
@@ -87,6 +101,21 @@
           _              (api/update! userstory {:name userstory-name})
           read-userstory (api/find-by-formatted-id *rest-api* :userstory (:formatted-id userstory))]
       (is (= (:metadata/ref-object-name read-userstory) userstory-name)))))
+
+(deftest ^:integration objects-can-be-updated-with-fetch-true-param
+  (let [userstory-name    (helper/generate-string)
+        userstory         (api/create! *rest-api* :userstory)
+        updated-userstory (api/update! *rest-api* userstory {:name userstory-name} {:fetch true})]
+    (is (contains? updated-userstory :name))
+    (is (contains? updated-userstory :ready))))
+
+(deftest ^:integration objects-can-be-updated-with-fetch-name-param
+  (binding [api/*current-user* *rest-api*]
+    (let [userstory-name    (helper/generate-string)
+          userstory         (api/create! *rest-api* :userstory)
+          updated-userstory (api/update! userstory {:name userstory-name} {:fetch "Name"})]
+      (is (contains? updated-userstory :name))
+      (is (not (contains? updated-userstory :ready))))))
 
 (deftest ^:integration an-error-occurs-when-trying-to-update-object-without-binding-current-user
   (is (thrown? AssertionError (api/update! :userstory {:name (helper/generate-string)}))))
