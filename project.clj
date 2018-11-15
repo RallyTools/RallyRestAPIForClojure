@@ -1,13 +1,13 @@
-(defproject com.rallydev/clj-rally "0.12.0"
+(defproject com.rallydev/clj-rally "0.12.1"
   :description "A clojure library for interating with Rally's webservice API."
   :url "https://github.com/RallyTools/RallyRestAPIForClojure"
   :license {:name "MIT License"
             :url  "http://en.wikipedia.org/wiki/MIT_License"}
   :deploy-repositories {"clojars" {:sign-releases false}}
   :dependencies [[camel-snake-kebab "0.4.0"]
-                 [cheshire "5.6.3"]
-                 [clj-http "3.3.0"]
-                 [clj-time "0.12.0"]
+                 [cheshire "5.8.1"]
+                 [clj-http "3.9.1"]
+                 [clj-time "0.15.1"]
                  [environ "1.1.0"]
                  [slingshot "0.12.2"]]
   :test-selectors {:default     (complement :integration)
