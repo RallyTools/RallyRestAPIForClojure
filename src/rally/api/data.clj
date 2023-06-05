@@ -1,6 +1,5 @@
 (ns rally.api.data
   (:require [camel-snake-kebab.core :as csk]
-            [camel-snake-kebab.extras :as utils]
             [clj-time.coerce :as coerce]
             [clj-time.format :as format]
             [clojure.string :as string]
@@ -98,7 +97,7 @@
          p3
 
          ; /slm/webservice/v2.0/UserStory/1234
-         :default
+         :else
          p2)
         rally-type->clojure-type)))
 
@@ -141,7 +140,7 @@
          (map ->str)
          (string/join "/"))
 
-    :default
+    :else
     (->str (or (:metadata/ref ref-or-object) ref-or-object))))
 
 (defn uri-like? [thing]
