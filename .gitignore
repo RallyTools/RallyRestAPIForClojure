@@ -12,3 +12,7 @@ pom.xml.asc
 /.idea*
 *.iml
 *.swp
+
+.calva
+.clj-kondo/
+.lsp

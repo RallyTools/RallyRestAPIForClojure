@@ -222,6 +222,14 @@ If you want to pass request parameters such as fetch, pass them as a map:
 ;     ...}
 ```
 
+## Troubleshooting
+
+To see debugging information, do one of the following:
+
+- Set a configuration variable such that `(environ.core/env :debug-rally-rest)` is true
+- Contrive to set the request :debug to true
+- Bind `rally.api/*debug*` to true
+
 ## License
 
 Copyright (c) Rally Software Development Corp. 2013-2015 Distributed under the MIT License.

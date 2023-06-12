@@ -3,7 +3,6 @@
             [cheshire.generate :as encoding]
             [clj-time.coerce :as coerce]
             [clj-time.format :as format]
-            [clojure.string :as string]
             [rally.api.data :as data]))
 
 (encoding/add-encoder java.net.URI encoding/encode-str)

@@ -1,14 +1,25 @@
 (ns rally.api
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as client]
             [clj-http.conn-mgr :as conn-mgr]
             [clj-http.cookies :as cookies]
+            [clojure.pprint :refer [pprint]]
+            [clojure.string :refer [lower-case]]
             [environ.core :as env]
             [rally.api.data :as data]
-            [rally.api.request :as request])
-  (:use [slingshot.slingshot :only [throw+]])
+            [rally.api.request :as request]
+            [slingshot.slingshot :refer [throw+]])
   (:refer-clojure :exclude [find]))
 
 (def ^:dynamic *current-user*)
+
+(def ^:dynamic *debug* false)
+
+(defn- debug? [request]
+  (or *debug*
+      (= (lower-case (str (:debug request))) "true")
+      (= (lower-case (str (env/env :debug-rally-rest))) "true")
+      false))
 
 (defn- not-found? [error]
   (= error "Cannot find object to read"))
@@ -24,16 +35,31 @@
       (some not-found? errors)       nil
       :else                          (throw+ response "rally-errors: %s" errors))))
 
+(defn parse-response-body [response debug]
+  (try
+    (update response :body #(if (nil? %) % (json/parse-string % true)))
+    (catch Exception x
+      (debug (.printStackTrace x))
+      (merge response {:body {}
+                       :parse-exception x}))))
+
 (defn do-request [{:keys [request] :as api}]
-  (let [response (client/request request)]
-    (if (string? (:body response))
-      (check-for-rally-errors api response)
-      (->> response
-           :body
-           data/->clojure-map
-           vals
-           first
-           (check-for-rally-errors api)))))
+  (let [debug   (debug? request)
+        request (assoc request :debug debug)]
+    (when debug (pprint {:api     (dissoc api :request)
+                         :request request}))
+    (let [response (client/request request)
+          _        (when debug (pprint {:response response}))
+          response (parse-response-body response debug)
+          _        (when debug (pprint {:json (:body response)}))]
+      (if (string? (:body response))
+        (check-for-rally-errors api response)
+        (->> response
+             :body
+             data/->clojure-map
+             vals
+             first
+             (check-for-rally-errors api))))))
 
 (defn create!
   ([type] (create! *current-user* type {}))
@@ -225,13 +251,13 @@
   [{:keys [api-key] :as credentials} rally-host conn-props]
   (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
         rest-api           {:request {:connection-manager connection-manager
+                                      ; avoid apache.http cookies warnings by using a standards compliant policy
+                                      :cookie-policy      :standard ; RFC 6265 (interoprability profile)
                                       :cookie-store       (cookies/cookie-store)
                                       :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
                                                            "X-RallyIntegrationPlatform" (env/env "java.version")
                                                            "X-RallyIntegrationLibrary"  "RallyRestAPIForClojure"}
-                                      :debug              (or (env/env :debug-rally-rest) false)
-                                      :method             :get
-                                      :as                 :json}
+                                      :method             :get}
                             :rally   {:host    rally-host
                                       :version :v2.0}}]
     (if api-key
