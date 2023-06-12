@@ -251,6 +251,8 @@
   [{:keys [api-key] :as credentials} rally-host conn-props]
   (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
         rest-api           {:request {:connection-manager connection-manager
+                                      ; avoid apache.http cookies warnings by using a standards compliant policy
+                                      :cookie-policy      :standard ; RFC 6265 (interoprability profile)
                                       :cookie-store       (cookies/cookie-store)
                                       :headers            {"X-RallyIntegrationOS"       (env/env "os.name")
                                                            "X-RallyIntegrationPlatform" (env/env "java.version")
