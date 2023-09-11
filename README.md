@@ -242,11 +242,11 @@ The Rally REST API for Clojure is available on an as-is basis.
 
 Rally Software does not actively maintain or support this toolkit.  If you have a question or problem, we recommend posting it to Stack Overflow: http://stackoverflow.com/questions/ask?tags=rally
 
-##Running the tests
+## Running the tests
 
 1. Start up alm
 2. Create test data
 3. Back in the RallyRestAPIForClojure directory, add a `.lein-env` file containing
 ```{:username "ue@test.com" :password "Password" :rally-host "http://localhost:7001"}```
 4. Run `lein test` or, for a smaller subset of the tests, `lein test :only rally.api-test` or `lein test :only rally.api-test/objects-can-be-copied`
-
+5. Run `lein test :integration` for deftests with `^:integration` metadata.
