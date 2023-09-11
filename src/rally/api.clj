@@ -39,7 +39,7 @@
   (try
     (update response :body #(if (nil? %) % (json/parse-string % true)))
     (catch Exception x
-      (debug (.printStackTrace x))
+      (when debug (.printStackTrace x))
       (merge response {:body {}
                        :parse-exception x}))))
 
