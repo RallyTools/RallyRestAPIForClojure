@@ -5,7 +5,7 @@
             :url  "http://en.wikipedia.org/wiki/MIT_License"}
   :deploy-repositories {"clojars" {:sign-releases false}}
   :dependencies [[camel-snake-kebab "0.4.3"]
-                 [cheshire "5.11.0"]
+                 [cheshire "5.12.0"]
                  [clj-http "3.12.3"]
                  [clj-time "0.15.2"]
                  [environ "1.2.0"]
@@ -16,6 +16,6 @@
             [lein-pprint "1.3.2"]]
   :profiles {:dev {:jvm-opts     ["-Xmx1g"]
                    :source-paths ["dev"]
-                   :dependencies [[org.clojure/clojure "1.8.0"]
+                   :dependencies [[org.clojure/clojure "1.11.2"]
                                   [criterium "0.4.6"]
                                   [crypto-random "1.2.1"]]}})
