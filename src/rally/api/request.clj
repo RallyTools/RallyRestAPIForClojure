@@ -1,9 +1,10 @@
 (ns rally.api.request
-  (:require [cheshire.core :as json]
-            [cheshire.generate :as encoding]
-            [clj-time.coerce :as coerce]
-            [clj-time.format :as format]
-            [rally.api.data :as data]))
+  (:require
+   [cheshire.core :as json]
+   [cheshire.generate :as encoding]
+   [clj-time.coerce :as coerce]
+   [clj-time.format :as format]
+   [rally.api.data :as data]))
 
 (encoding/add-encoder java.net.URI encoding/encode-str)
 
@@ -73,7 +74,7 @@
   (assoc rest-api :default-data-fn default-data-fn))
 
 (defn get-default-data-fn [rest-api]
-  (:default-data-fn rest-api (fn [type values] values)))
+  (:default-data-fn rest-api (fn [_type values] values)))
 
 (defn debug [rest-api]
   (assoc-in rest-api [:request :debug] true))
@@ -89,6 +90,4 @@
 
 (defn disable-throw-on-error [rest-api]
   (-> (assoc-in rest-api [:request :throw-exceptions] false)
-      (assoc :disable-throw-on-error? true)
-
-      ))
+      (assoc :disable-throw-on-error? true)))

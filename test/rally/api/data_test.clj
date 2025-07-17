@@ -1,8 +1,10 @@
 (ns rally.api.data-test
-  (:require [rally.api.data :as data]
-            [clojure.test :refer :all])
-  (:import [java.util UUID]
-           [java.net URI]))
+  (:require
+   [rally.api.data :as data]
+   [clojure.test :refer [deftest is]])
+  (:import
+   [java.util UUID]
+   [java.net URI]))
 
 (deftest metadata-name?-should-work-with-rally-case-and-clojure-case-names
   (is (= true (data/metadata-name? "_ref")))
@@ -119,9 +121,9 @@
                              [:contains :name "foo"]])))
   (is (= "(((Name = \"Junk\") AND (Age = 34)) AND (Email contains \"test.com\"))"
          (data/create-query [:and
-                               [:= :name "Junk"]
-                               [:= :age 34]
-                               [:contains :email "test.com"]])))
+                             [:= :name "Junk"]
+                             [:= :age 34]
+                             [:contains :email "test.com"]])))
   (is (= "(((Name = \"Junk\") OR (Age = 34)) OR (Email contains \"test.com\"))"
          (data/create-query [:or
                              [:= :name "Junk"]

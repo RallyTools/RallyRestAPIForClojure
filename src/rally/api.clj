@@ -1,14 +1,15 @@
 (ns rally.api
-  (:require [clj-http.client :as client]
-            [clj-http.conn-mgr :as conn-mgr]
-            [clj-http.cookies :as cookies]
-            [environ.core :as env]
-            [rally.api.data :as data]
-            [rally.api.request :as request]
-            [slingshot.slingshot :refer [throw+]])
+  (:require
+   [clj-http.client :as client]
+   [clj-http.conn-mgr :as conn-mgr]
+   [clj-http.cookies :as cookies]
+   [environ.core :as env]
+   [rally.api.data :as data]
+   [rally.api.request :as request]
+   [slingshot.slingshot :refer [throw+]])
   (:refer-clojure :exclude [find]))
 
-(def ^:dynamic *current-user*)
+(def ^:dynamic *current-user* nil)
 
 (defn- not-found? [error]
   (= error "Cannot find object to read"))
@@ -37,7 +38,7 @@
 
 (defn create!
   ([type] (create! *current-user* type {}))
-  
+
   ([api-or-type type-or-data]
    (if (keyword? api-or-type)
      (create! *current-user* api-or-type type-or-data)
@@ -62,7 +63,7 @@
 (defn copy!
   ([ref-or-object]
    (copy! *current-user* ref-or-object))
-  
+
   ([rest-api ref-or-object]
    {:pre [(valid-rest-api? rest-api)]}
    (let [ref  (data/->ref ref-or-object)
@@ -98,7 +99,7 @@
 (defn update-collection!
   ([collection-ref-or-object action items]
    (update-collection! *current-user* collection-ref-or-object action items))
-  
+
   ([rest-api collection-ref-or-object action items]
    {:pre [(valid-rest-api? rest-api)]}
    (let [ref (str (data/->ref collection-ref-or-object) "/" (name action))
@@ -112,7 +113,7 @@
 (defn delete!
   ([ref-or-object]
    (delete! *current-user* ref-or-object))
-  
+
   ([rest-api ref-or-object]
    {:pre [(valid-rest-api? rest-api)]}
    (-> rest-api
@@ -131,12 +132,12 @@
 (defn query
   ([uri]
    (query *current-user* uri {}))
-  
+
   ([api-or-uri uri-or-spec]
    (if (valid-rest-api? api-or-uri)
      (query api-or-uri uri-or-spec {})
      (query *current-user* api-or-uri uri-or-spec)))
-  
+
   ([rest-api uri query-spec]
    {:pre [(valid-rest-api? rest-api)]}
    (let [query-spec         (if (vector? query-spec) {:query query-spec} query-spec)
@@ -152,14 +153,14 @@
 (defn find
   ([ref-or-object]
    (find *current-user* ref-or-object))
-  
+
   ([api-ref-or-object ref-or-object-or-query-spec]
    (if (valid-rest-api? api-ref-or-object)
      (-> api-ref-or-object
          (request/set-url ref-or-object-or-query-spec)
          do-request)
      (find *current-user* api-ref-or-object ref-or-object-or-query-spec)))
-  
+
   ([rest-api uri query-spec]
    {:pre [(valid-rest-api? rest-api)]}
    (-> (query rest-api uri query-spec)
@@ -168,7 +169,7 @@
 (defn find-by-formatted-id
   ([rally-type formatted-id]
    (find-by-formatted-id *current-user* rally-type formatted-id))
-  
+
   ([rest-api rally-type formatted-id]
    {:pre [(valid-rest-api? rest-api)]}
    (let [query-spec {:query [:= :formatted-id formatted-id]
@@ -182,7 +183,7 @@
 (defn find-by-id
   ([type id]
    (find-by-id *current-user* type id))
-  
+
   ([rest-api type id]
    {:pre [(valid-rest-api? rest-api)]}
    (-> rest-api
@@ -191,7 +192,7 @@
 
 (defn current-workspace
   ([] (current-workspace *current-user*))
-  
+
   ([rest-api]
    {:pre [(valid-rest-api? rest-api)]}
    (let [current-project (find rest-api (request/get-current-project rest-api))]
@@ -199,14 +200,14 @@
 
 (defn current-project
   ([] (current-project *current-user*))
-  
+
   ([rest-api]
    {:pre [(valid-rest-api? rest-api)]}
    (find rest-api :project {:fetch true})))
 
 (defn current-user
   ([] (current-user *current-user*))
-  
+
   ([rest-api]
    {:pre [(valid-rest-api? rest-api)]}
    (-> rest-api
@@ -214,6 +215,8 @@
        do-request)))
 
 (defn- security-token [rest-api {:keys [username password]}]
+  (prn "!!! username" username)
+  (prn "!!! password" password)
   (-> rest-api
       (request/set-basic-auth username password)
       (request/set-uri :security :authorize)
@@ -222,7 +225,7 @@
 
 (defn create-basic-rest-api
   "Create a rest-api, but do not make any calls to the server."
-  [{:keys [api-key] :as credentials} rally-host conn-props]
+  [{:keys [api-key] :as _credentials} rally-host conn-props]
   (let [connection-manager (conn-mgr/make-reusable-conn-manager conn-props)
         rest-api           {:request {:connection-manager connection-manager
                                       :cookie-policy      :standard ; RFC 6265 (interoprability profile)
@@ -262,7 +265,7 @@
      (create-rest-api credentials rally-host)))
   ([credentials rally-host]
    (create-rest-api credentials rally-host {}))
-  ([{:keys [api-key] :as credentials} rally-host conn-props]
+  ([{:keys [_api-key] :as credentials} rally-host conn-props]
    (let [rest-api (create-basic-rest-api credentials rally-host conn-props)]
      (init-rest-api rest-api credentials))))
 

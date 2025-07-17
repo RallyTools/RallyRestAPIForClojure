@@ -1,3 +1,9 @@
+## ⚠️ Deprecation Notice
+
+**This project is deprecated and no longer maintained.**  
+There are no plans for future updates, bug fixes, or support.  
+Archived on: **2025-07-17**
+
 # RallyRestAPIForClojure
 
 RallyRestAPIForClojure is a Clojure library to access your Rally data. It currently supports querying, creates, reads, updates and deletes. If you would like more information on the Rally Rest API please see Rally's [Web Services API documentation](https://rally1.rallydev.com/slm/doc/webservice).
@@ -6,7 +12,8 @@ RallyRestAPIForClojure is a Clojure library to access your Rally data. It curren
 
 [![Clojars Project](http://clojars.org/com.rallydev/clj-rally/latest-version.svg)](http://clojars.org/com.rallydev/clj-rally)
 
-### Creating a REST API
+## Creating a REST API
+
 The rest API is the central object of the Clojure API for Rally. An API can be created with a username/password
 or with an API key.
 
@@ -27,7 +34,8 @@ or with an API key.
 ; => #'user/rest-api
 ```
 
-### Querying
+## Querying
+
 The query API is written in a way that should be comfortable to most Clojure developers. There are three major parts to the query API.
 
 1. [Rally Keyword -> Clojure Keyword Translation](#rally-keyword---clojure-keyword-tranlation)
@@ -49,12 +57,14 @@ Before we get into the details, let's take a look at a simple example.
 This simple query gets translated into the URL `http://rally1.rallydev.com/slm/webservice/v2.0/Defect`.
 
 A couple of things to notice about this first example:
-* The keyword `:defect` is translated into `"Defect"`
-* The results of the query are returned as a sequence of maps.
-* The keys of each of the maps have been translated into clojure idiomatic keywords.
-* api/query returns a lazy seq of all the paged results.
 
-#### Rally Keyword -> Clojure Keyword Tranlation
+- The keyword `:defect` is translated into `"Defect"`
+- The results of the query are returned as a sequence of maps.
+- The keys of each of the maps have been translated into clojure idiomatic keywords.
+- api/query returns a lazy seq of all the paged results.
+
+### Rally Keyword -> Clojure Keyword Tranlation
+
 The rest API tries to make working with Rally in Clojure seem natural. Most of the translations Rally->Clojure and Clojure->Rally are done with a library called [camel-snake-kebab](https://github.com/qerub/camel-snake-kebab).
 When going from Rally -> Clojure we use the [->kebab-case-keyword](https://github.com/qerub/camel-snake-kebab/blob/stable/src/camel_snake_kebab/core.cljx#L20) translation.
 
@@ -96,6 +106,7 @@ As you might guess, the API has the reverse function.
 These translations are used when writing queries and returning results. All object fields are translated using the `data/->clojure-case` function before return the results to the caller. The `data/->rally-case` function is used when translating queries to their proper Rally format.
 
 #### Query Specs
+
 Query specs are modeled after [honey-sql](https://github.com/jkk/honeysql). Let's look at a couple of examples to get the hang of it.
 
 ```clojure
@@ -132,6 +143,7 @@ Query specs can also contain information like `pagesize` or `start`.
 ```
 
 #### URI Generation
+
 Almost anything reasonable can be used as an URI in the API.
 
 ```clojure
@@ -157,7 +169,8 @@ Almost anything reasonable can be used as an URI in the API.
 ;; Translates to http://rally1.rallydev.com/slm/webservice/v2.0/defect/123
 ```
 
-### Creating Data
+## Creating Data
+
 ```clojure
 ;; Create a user story
 (api/create! rest-api :user-story {:name "This feature is really cool"})
@@ -171,29 +184,35 @@ Almost anything reasonable can be used as an URI in the API.
 ;            :count 0},
 ;     .... }
 ```
+
 The API allows "defaulting" of data during `api/create!`. If you want to default data, then you will need to provide `default-data-fn`. The `default-data-fn` is a function
 that takes 2 parameters. The parameters are a type and a data map. The type is the data type in which the user is trying to create (`:defect`, `:task`, ...) The data map is the map of data that will be used to create the object.
+
 ```clojure
 (let [default-name (fn [type data] (merge {:name "Foo"} data))]
   (-> rest-api
       (request/set-default-data-fn default-name)
       (api/create! rest-api :userstory)))
 ```
+
 If you want to pass request parameters such as fetch, pass them as a map:
+
 ```clojure
 (api/create! rest-api :user-story {:name "This feature is really cool"} {:fetch :name})
 ; => {:name "This feature is really cool",
 ;     ...metadata... }
 ```
 
-### Updating Data
+## Updating Data
+
 ```clojure
 (def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
 (api/update! rest-api my-user-story {:description "This is my description"})
 (api/update! rest-api my-user-story {:description "Only return name for the response"} {:fetch :name})
 ```
 
-#### Updating Collections
+### Updating Collections
+
 ```clojure
 ;; Add a defect to a user story
 (def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
@@ -201,7 +220,8 @@ If you want to pass request parameters such as fetch, pass them as a map:
 (api/update-collection! rest-api (:defects my-user-story) :add [my-defect])
 ```
 
-#### Setting Relationships
+### Setting Relationships
+
 ```clojure
 ;; Add a parent to a userstory
 (def my-user-story (api/create! rest-api :user-story {:name "This feature is really cool"}))
@@ -209,7 +229,8 @@ If you want to pass request parameters such as fetch, pass them as a map:
 (api/update! rest-api my-user-story {:parent my-parent})
 ```
 
-### Copying data
+## Copying data
+
 ```clojure
 ;; Copy an artifact
 (def my-defect (api/create! rest-api :defect {:name "This defect can be copied"}))
@@ -228,17 +249,17 @@ Copyright (c) Rally Software Development Corp. 2013-2015 Distributed under the M
 
 ## Warranty
 
-The Rally REST API for Clojure is available on an as-is basis. 
+The Rally REST API for Clojure is available on an as-is basis.
 
 ## Support
 
-Rally Software does not actively maintain or support this toolkit.  If you have a question or problem, we recommend posting it to Stack Overflow: http://stackoverflow.com/questions/ask?tags=rally
+Rally Software does not actively maintain or support this toolkit. If you have a question or problem, we recommend posting it to Stack Overflow: <http://stackoverflow.com/questions/ask?tags=rally>
 
 ## Running the tests
 
 1. Start up alm
 2. Create test data
 3. Back in the RallyRestAPIForClojure directory, add a `.lein-env` file containing
-```{:username "ue@test.com" :password "Password" :rally-host "http://localhost:7001"}```
+   `{:username "ue@test.com" :password "Password" :rally-host "http://localhost:7001"}`
 4. Run `lein test` or, for a smaller subset of the tests, `lein test :only rally.api-test` or `lein test :only rally.api-test/objects-can-be-copied`
 5. Run `lein test :integration` for deftests with `^:integration` metadata.

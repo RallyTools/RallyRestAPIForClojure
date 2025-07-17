@@ -1,14 +1,13 @@
 (ns rally.api-test
-  (:require [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
-            [clojure.set :as set]
-            [clojure.test :refer :all]
-            [crypto.random :as random]
-            [environ.core :as env]
-            [rally.api :as api]
-            [rally.api.data :as data]
-            [rally.api.request :as request]
-            [rally.helper :refer [*rest-api*] :as helper]))
+  (:require
+   [clj-time.coerce :as coerce]
+   [clj-time.core :as time]
+   [clojure.set :as set]
+   [clojure.test :refer [deftest is use-fixtures]]
+   [rally.api :as api]
+   [rally.api.data :as data]
+   [rally.api.request :as request]
+   [rally.helper :refer [*rest-api*] :as helper]))
 
 (use-fixtures :each helper/api-fixture)
 
@@ -48,7 +47,7 @@
     (is (= (:metadata/ref-object-name read-userstory) userstory-name))))
 
 (deftest ^:integration find-by-formatted-id-should-handle-the-oddity-in-querying-for-artifacts
-  (let [userstory (api/create! *rest-api* :userstory)
+  (let [_userstory (api/create! *rest-api* :userstory)
         defect    (api/create! *rest-api* :defect)
         artifact  (api/find-by-formatted-id *rest-api* :artifact (:formatted-id defect))]
     (is (= (:metadata/ref-object-name artifact) (:metadata/ref-object-name defect)))))
@@ -174,7 +173,7 @@
     (is (set/subset? (set (vec created-refs)) (set queried-refs)))))
 
 (deftest ^:integration query-should-handle-order-by-correctly
-  (let [created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory)))
+  (let [_created-userstories (doall (repeatedly 20 #(api/create! *rest-api* :userstory)))
         userstory-seq       (api/query *rest-api* :userstory {:order [:name :asc]})
 
         userstory-names     (map :metadata/ref-object-name userstory-seq)
@@ -269,12 +268,12 @@
 (deftest ^:integration relationships-can-be-built-from-ref
   (let [parent (api/create! *rest-api* :userstory)
         child  (api/create! *rest-api* :userstory {:parent parent})]
-    (= [child] (api/query *rest-api* [parent :children]))))
+    (is (= [child] (api/query *rest-api* [parent :children])))))
 
 (deftest ^:integration objects-can-be-used-queries
   (let [parent (api/create! *rest-api* :userstory)
         child  (api/create! *rest-api* :userstory {:parent parent})]
-    (= [child] (api/query *rest-api* :userstory [:= :parent parent]))))
+    (is (= [child] (api/query *rest-api* :userstory [:= :parent parent])))))
 
 (deftest ^:integration can-create-portfolio-items
   (let [feature-name (helper/generate-string)
