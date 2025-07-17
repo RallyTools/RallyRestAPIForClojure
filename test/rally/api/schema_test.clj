@@ -1,9 +1,11 @@
 (ns rally.api.schema-test
-  (:require [rally.api :as api]
-            [rally.api.schema :as schema]
-            [clojure.test :refer :all]))
+  (:require
+   [rally.api :as api]
+   [rally.api.schema :as schema]
+   [clojure.test :refer [deftest is use-fixtures]]))
 
-(def ^:dynamic *rest-api*)
+(def ^:dynamic *rest-api* nil)
+
 (defn schema-fixture [f]
   (let [rest-api (api/create-rest-api)]
     (try
